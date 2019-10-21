@@ -8,9 +8,7 @@ Collection of simple code samples for ACI programmability. Includes beginner lev
 
 This repository contains sample code for automating various types of tasks relating to ACI configuration and initial ACI fabric bringup.
 
-These are the step by step instructions for the Cisco Live Devnet Workshop.  
-
-The samples include both Ansible playbooks and Python scripts utilizing Cobra SDK.
+Following are the step by step instructions for the Cisco Live Devnet Workshop.  The samples include both Ansible playbooks and Python scripts utilizing Cobra SDK.
 
 # Workshop Instructions
 ---
