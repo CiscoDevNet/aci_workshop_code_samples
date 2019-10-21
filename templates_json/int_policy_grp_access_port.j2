@@ -1,0 +1,57 @@
+      {
+        "infraAccPortGrp": {
+          "attributes": {
+            "dn": "uni/infra/funcprof/accportgrp-{{ policy_group_name }}",
+            "name": "{{ policy_group_name }}",
+            "rn": "accportgrp-{{ policy_group_name }}",
+            "status": "created"
+          },
+          "children": [
+            {
+              "infraRsHIfPol": {
+                "attributes": {
+                  "tnFabricHIfPolName": "{{ item.link_level_policy }}",
+                  "status": "created,modified"
+                },
+                "children": []
+              }
+            },
+            {
+              "infraRsAttEntP": {
+                "attributes": {
+                  "tDn": "uni/infra/attentp-{{ item.aep }}",
+                  "status": "created,modified"
+                },
+                "children": []
+              }
+            },
+            {
+              "infraRsCdpIfPol": {
+                "attributes": {
+                  "tnCdpIfPolName": "{{ item.cdp_policy }}",
+                  "status": "created,modified"
+                },
+                "children": []
+              }
+            },
+            {
+              "infraRsLldpIfPol": {
+                "attributes": {
+                  "tnLldpIfPolName": "{{ item.lldp_policy }}",
+                  "status": "created,modified"
+                },
+                "children": []
+              }
+            },
+            {
+              "infraRsStpIfPol": {
+                "attributes": {
+                  "tnStpIfPolName": "{{ item.stp_int_policy }}",
+                  "status": "created,modified"
+                },
+                "children": []
+              }
+            }
+          ]
+        }
+      }

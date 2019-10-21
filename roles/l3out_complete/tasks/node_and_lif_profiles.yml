@@ -1,0 +1,489 @@
+---
+
+- name: set facts if EIGRP needs to be configured on each interface
+  set_fact:
+     eigrp_status1:  created
+     eigrp_status2:  created,modified
+     eigrp_routing:  True
+  when: item.l3out_routing_protocol == 'eigrp'
+
+- name: set facts if EIGRP not needed
+  set_fact:
+     eigrp_status1:  deleted
+     eigrp_status2:  deleted
+     eigrp_routing:  False
+  when: item.l3out_routing_protocol != 'eigrp'
+
+- name: set facts if BGP not required
+  set_fact:
+    bgp_routing: False
+
+- name: set facts if BGP needs to be configured
+  set_fact:
+    bgp_routing:  True
+  when: (item.l3out_routing_protocol == 'bgp') or (item.l3out_routing_protocol == 'bgp_default')
+
+- name: Query to see if node profile 1 of 2 (38x1) ALREADY EXISTS
+  aci_rest:
+    host: '{{ aci_hostname }}'
+    username: '{{ aci_username }}'
+    password: '{{ aci_password }}'
+    validate_certs: '{{ aci_validate_certs | default(false) }}'
+    use_ssl: '{{ aci_use_ssl | default(true) }}'
+    use_proxy: '{{ aci_use_proxy | default(true) }}'
+    output_level: normal
+    method: get
+    path: /api/node/mo/uni/tn-{{ aci_tenant }}/out-{{ item.l3out_name }}/lnodep-sw{{ item.leaf1.node_id }}-NodePrfl.json
+  register: node_profile_exists
+
+- name: Test that node profile does not already exist
+  debug:
+     msg: "Node profile does not exist so creating new one"
+  when: node_profile_exists.totalCount == 0
+
+- name: create Logical Node Profile 1 of 2 (38x1) from JSON template
+  template:
+    src: ./templates_json/node_profile.j2
+    dest: ./temp_json_files/node_profile1.txt
+  vars:
+     current_leaf_node_id:   "{{ item.leaf1.node_id }}"
+     current_leaf_router_id: "{{ item.leaf1.router_id }}"
+     current_leaf_uplink_1_peer: "{{ item.leaf1.uplink_1_peer }}"
+     current_leaf_uplink_2_peer: "{{ item.leaf1.uplink_2_peer }}"
+  when: node_profile_exists.totalCount == 0
+
+- name: Add logical node profile 1 of 2 (38x1)
+  aci_rest:
+    host: '{{ aci_hostname }}'
+    username: '{{ aci_username }}'
+    password: '{{ aci_password }}'
+    validate_certs: '{{ aci_validate_certs | default(false) }}'
+    use_ssl: '{{ aci_use_ssl | default(true) }}'
+    use_proxy: '{{ aci_use_proxy | default(true) }}'
+    output_level: normal
+    method: post
+    path: /api/node/mo/uni/tn-{{ aci_tenant }}/out-{{ item.l3out_name }}/lnodep-sw{{ item.leaf1.node_id }}-NodePrfl.json
+    src:  ./temp_json_files/node_profile1.txt
+  when: node_profile_exists.totalCount == 0
+
+- name: Query to see if node profile 2 of 2 (3812) ALREADY EXISTS
+  aci_rest:
+    host: '{{ aci_hostname }}'
+    username: '{{ aci_username }}'
+    password: '{{ aci_password }}'
+    validate_certs: '{{ aci_validate_certs | default(false) }}'
+    use_ssl: '{{ aci_use_ssl | default(true) }}'
+    use_proxy: '{{ aci_use_proxy | default(true) }}'
+    output_level: normal
+    method: get
+    path: /api/node/mo/uni/tn-{{ aci_tenant }}/out-{{ item.l3out_name }}/lnodep-sw{{ item.leaf2.node_id }}-NodePrfl.json
+  register: node_profile2_exists
+
+- name: Test that node profile does not already exist
+  debug:
+     msg: "Node profile does not exist so creating new one"
+  when: node_profile2_exists.totalCount == 0
+
+- name: create Logical Node Profile 2 of 2 (38x2) from JSON template
+  template:
+    src: ./templates_json/node_profile.j2
+    dest: ./temp_json_files/node_profile2.txt
+  vars:
+     current_leaf_node_id:   "{{ item.leaf2.node_id }}"
+     current_leaf_router_id: "{{ item.leaf2.router_id }}"
+     current_leaf_uplink_1_peer: "{{ item.leaf2.uplink_1_peer }}"
+     current_leaf_uplink_2_peer: "{{ item.leaf2.uplink_2_peer }}"
+  when: node_profile2_exists.totalCount == 0
+
+- name: Add logical node profile 2 of 2 (38x2)
+  aci_rest:
+    host: '{{ aci_hostname }}'
+    username: '{{ aci_username }}'
+    password: '{{ aci_password }}'
+    validate_certs: '{{ aci_validate_certs | default(false) }}'
+    use_ssl: '{{ aci_use_ssl | default(true) }}'
+    use_proxy: '{{ aci_use_proxy | default(true) }}'
+    output_level: normal
+    method: post
+    path: /api/node/mo/uni/tn-{{ aci_tenant }}/out-{{ item.l3out_name }}/lnodep-sw{{ item.leaf2.node_id }}-NodePrfl.json
+    src: ./temp_json_files/node_profile2.txt
+  when: node_profile2_exists.totalCount == 0
+
+# if static routing selected, create default route with one or two next-hops (depending on how many uplinks)
+
+- name: Add static routes to nodes in l3out (1 of 4)
+  aci_rest:
+    host: '{{ aci_hostname }}'
+    username: '{{ aci_username }}'
+    password: '{{ aci_password }}'
+    validate_certs: '{{ aci_validate_certs | default(false) }}'
+    use_ssl: '{{ aci_use_ssl | default(true) }}'
+    use_proxy: '{{ aci_use_proxy | default(true) }}'
+    output_level: normal
+    method: post
+    path: /api/node/mo/uni/tn-common/out-{{ item.l3out_name }}/lnodep-sw{{ item.leaf1.node_id }}-NodePrfl/rsnodeL3OutAtt-[topology/pod-1/node-{{ item.leaf1.node_id }}]/rt-[0.0.0.0/0].json
+    content:
+      {
+        "ipRouteP": {
+          "attributes": {
+            "dn": "uni/tn-common/out-{{ item.l3out_name }}/lnodep-sw{{ item.leaf1.node_id }}-NodePrfl/rsnodeL3OutAtt-[topology/pod-1/node-{{ item.leaf1.node_id }}]/rt-[0.0.0.0/0]",
+            "ip": "0.0.0.0/0",
+            "rn": "rt-[0.0.0.0/0]",
+            "status": "created"
+          },
+          "children": [
+            {
+              "ipNexthopP": {
+                "attributes": {
+                  "dn": "uni/tn-common/out-{{ item.l3out_name }}/lnodep-sw{{ item.leaf1.node_id }}-NodePrfl/rsnodeL3OutAtt-[topology/pod-1/node-{{ item.leaf1.node_id }}]/rt-[0.0.0.0/0]/nh-[{{ item.leaf1.uplink_1_peer }}]",
+                  "nhAddr": "{{ item.leaf1.uplink_1_peer }}",
+                  "pref": "1",
+                  "rn": "nh-[{{ item.leaf1.uplink_1_peer }}]",
+                  "status": "created"
+                },
+                "children": []
+              }
+            }
+          ]
+        }
+      }
+  when: ( (item.l3out_routing_protocol == 'static' or item.l3out_routing_protocol == 'bgp_default') and
+           node_profile_exists.totalCount == 0 and item.leaf1.uplink_1_name )
+
+  ignore_errors: True
+
+- name: Add static routes to nodes in l3out (2 of 4)
+  aci_rest:
+    host: '{{ aci_hostname }}'
+    username: '{{ aci_username }}'
+    password: '{{ aci_password }}'
+    validate_certs: '{{ aci_validate_certs | default(false) }}'
+    use_ssl: '{{ aci_use_ssl | default(true) }}'
+    use_proxy: '{{ aci_use_proxy | default(true) }}'
+    output_level: normal
+    method: post
+    path: /api/node/mo/uni/tn-common/out-{{ item.l3out_name }}/lnodep-sw{{ item.leaf1.node_id }}-NodePrfl/rsnodeL3OutAtt-[topology/pod-1/node-{{ item.leaf1.node_id }}]/rt-[0.0.0.0/0].json
+    content:
+      {
+        "ipRouteP": {
+          "attributes": {
+            "dn": "uni/tn-common/out-{{ item.l3out_name }}/lnodep-sw{{ item.leaf1.node_id }}-NodePrfl/rsnodeL3OutAtt-[topology/pod-1/node-{{ item.leaf1.node_id }}]/rt-[0.0.0.0/0]",
+            "ip": "0.0.0.0/0",
+            "rn": "rt-[0.0.0.0/0]",
+            "status": "created"
+          },
+          "children": [
+            {
+              "ipNexthopP": {
+                "attributes": {
+                  "dn": "uni/tn-common/out-{{ item.l3out_name }}/lnodep-sw{{ item.leaf1.node_id }}-NodePrfl/rsnodeL3OutAtt-[topology/pod-1/node-{{ item.leaf1.node_id }}]/rt-[0.0.0.0/0]/nh-[{{ item.leaf1.uplink_2_peer }}]",
+                  "nhAddr": "{{ item.leaf1.uplink_2_peer }}",
+                  "pref": "1",
+                  "rn": "nh-[{{ item.leaf1.uplink_2_peer }}]",
+                  "status": "created"
+                },
+                "children": []
+              }
+            }
+          ]
+        }
+      }
+  when: ( (item.l3out_routing_protocol == 'static' or item.l3out_routing_protocol == 'bgp_default') and
+            node_profile_exists.totalCount == 0 and item.leaf1.uplink_2_name )
+  ignore_errors: True
+
+- name: Add static routes to nodes in l3out (3 of 4)
+  aci_rest:
+    host: '{{ aci_hostname }}'
+    username: '{{ aci_username }}'
+    password: '{{ aci_password }}'
+    validate_certs: '{{ aci_validate_certs | default(false) }}'
+    use_ssl: '{{ aci_use_ssl | default(true) }}'
+    use_proxy: '{{ aci_use_proxy | default(true) }}'
+    output_level: normal
+    method: post
+    path: /api/node/mo/uni/tn-common/out-{{ item.l3out_name }}/lnodep-sw{{ item.leaf2.node_id }}-NodePrfl/rsnodeL3OutAtt-[topology/pod-1/node-{{ item.leaf2.node_id }}]/rt-[0.0.0.0/0].json
+    content:
+      {
+        "ipRouteP": {
+          "attributes": {
+            "dn": "uni/tn-common/out-{{ item.l3out_name }}/lnodep-sw{{ item.leaf2.node_id }}-NodePrfl/rsnodeL3OutAtt-[topology/pod-1/node-{{ item.leaf2.node_id }}]/rt-[0.0.0.0/0]",
+            "ip": "0.0.0.0/0",
+            "rn": "rt-[0.0.0.0/0]",
+            "status": "created"
+          },
+          "children": [
+            {
+              "ipNexthopP": {
+                "attributes": {
+                  "dn": "uni/tn-common/out-{{ item.l3out_name }}/lnodep-sw{{ item.leaf2.node_id }}-NodePrfl/rsnodeL3OutAtt-[topology/pod-1/node-{{ item.leaf2.node_id }}]/rt-[0.0.0.0/0]/nh-[{{ item.leaf2.uplink_1_peer }}]",
+                  "nhAddr": "{{ item.leaf2.uplink_1_peer }}",
+                  "pref": "1",
+                  "rn": "nh-[{{ item.leaf2.uplink_1_peer }}]",
+                  "status": "created"
+                },
+                "children": []
+              }
+            }
+          ]
+        }
+      }
+  when: ( (item.l3out_routing_protocol == 'static' or item.l3out_routing_protocol == 'bgp_default') and
+             node_profile2_exists.totalCount == 0 and item.leaf2.uplink_1_name )
+  ignore_errors: True
+
+- name: Add static routes to nodes in l3out (4 of 4)
+  aci_rest:
+    host: '{{ aci_hostname }}'
+    username: '{{ aci_username }}'
+    password: '{{ aci_password }}'
+    validate_certs: '{{ aci_validate_certs | default(false) }}'
+    use_ssl: '{{ aci_use_ssl | default(true) }}'
+    use_proxy: '{{ aci_use_proxy | default(true) }}'
+    output_level: normal
+    method: post
+    path: /api/node/mo/uni/tn-common/out-{{ item.l3out_name }}/lnodep-sw{{ item.leaf2.node_id }}-NodePrfl/rsnodeL3OutAtt-[topology/pod-1/node-{{ item.leaf2.node_id }}]/rt-[0.0.0.0/0].json
+    content:
+      {
+        "ipRouteP": {
+          "attributes": {
+            "dn": "uni/tn-common/out-{{ item.l3out_name }}/lnodep-sw{{ item.leaf2.node_id }}-NodePrfl/rsnodeL3OutAtt-[topology/pod-1/node-{{ item.leaf2.node_id }}]/rt-[0.0.0.0/0]",
+            "ip": "0.0.0.0/0",
+            "rn": "rt-[0.0.0.0/0]",
+            "status": "created"
+          },
+          "children": [
+            {
+              "ipNexthopP": {
+                "attributes": {
+                  "dn": "uni/tn-common/out-{{ item.l3out_name }}/lnodep-sw{{ item.leaf2.node_id }}-NodePrfl/rsnodeL3OutAtt-[topology/pod-1/node-{{ item.leaf2.node_id }}]/rt-[0.0.0.0/0]/nh-[{{ item.leaf2.uplink_2_peer }}]",
+                  "nhAddr": "{{ item.leaf2.uplink_2_peer }}",
+                  "pref": "1",
+                  "rn": "nh-[{{ item.leaf2.uplink_2_peer }}]",
+                  "status": "created"
+                },
+                "children": []
+              }
+            }
+          ]
+        }
+      }
+  when: ( (item.l3out_routing_protocol == 'static' or item.l3out_routing_protocol == 'bgp_default') and
+            node_profile2_exists.totalCount == 0 and item.leaf2.uplink_2_name )
+  ignore_errors: True
+
+
+# create 4 interface policy groups (2 for each border leaf)
+# Determine if these are individual Ports or Port-Channels
+
+- name: print uplink type
+  debug:
+    var: item.int_policy_group_type
+
+- name: set facts for uplink-path based on port or port-channel
+  set_fact:
+     uplink1_3811_path: "{{ item.int_policy_group1 }}"
+     uplink2_3811_path: "{{ item.int_policy_group2 }}"
+     uplink1_3812_path: "{{ item.int_policy_group1 }}"
+     uplink2_3812_path: "{{ item.int_policy_group2 }}"
+  when: item.int_policy_group_type == 'port-channel'
+
+- name: set facts for uplink-path based on port or port-channel
+  set_fact:
+     uplink1_3811_path: "eth1/{{ item.ports_leaf1_uplink1_to_fw1 }}"
+     uplink2_3811_path: "eth1/{{ item.ports_leaf1_uplink2_to_fw2 }}"
+     uplink1_3812_path: "eth1/{{ item.ports_leaf2_uplink1_to_fw1 }}"
+     uplink2_3812_path: "eth1/{{ item.ports_leaf2_uplink2_to_fw2 }}"
+  when: item.int_policy_group_type == 'port'
+
+- name: print uplink1_3811_path variable
+  debug:
+    var:  uplink1_3811_path
+
+- name: Query to see if Logical Interface Profile 1 of 4 ALREADY EXISTS
+  aci_rest:
+    host: '{{ aci_hostname }}'
+    username: '{{ aci_username }}'
+    password: '{{ aci_password }}'
+    validate_certs: '{{ aci_validate_certs | default(false) }}'
+    use_ssl: '{{ aci_use_ssl | default(true) }}'
+    use_proxy: '{{ aci_use_proxy | default(true) }}'
+    output_level: normal
+    method: get
+    path: /api/node/mo/uni/tn-{{ aci_tenant }}/out-{{ item.l3out_name }}/lnodep-sw{{ item.leaf1.node_id }}-NodePrfl/lifp-{{ item.leaf1.uplink_1_name }}.json
+  register: if_pol_exists
+
+- name: print status message
+  debug:
+     msg: "Logical Interface Profile does not exist - creating..."
+  when: if_pol_exists.totalCount == 0 and item.ports_leaf1_uplink1_to_fw1
+
+- name: create Logical Interface Profile 1 of 4 (38x1) from JSON template
+  template:
+    src: ./templates_json/logical_int_profile.j2
+    dest: ./temp_json_files/logical_int_profile1.txt
+  vars:
+     current_leaf_node_id:   "{{ item.leaf1.node_id }}"
+     current_uplink_node_path: "{{ uplink1_3811_path }}"
+     current_ext_uplink_name: "{{ item.leaf1.uplink_1_name }}"
+     current_encap_vlan:  "{{ item.leaf1.uplink_1_encap_vlan }}"
+     current_link_ip:  "{{ item.leaf1.uplink_1_ip }}"
+     current_uplink_peer_ip: "{{ item.leaf1.uplink_1_peer }}"
+     need_sec_address:  "{{ item.leaf1.uplink_1_secondary }}"
+     sec_address:  "{{ item.leaf1.uplink_1_secondary }}"
+  when: if_pol_exists.totalCount == 0 and item.ports_leaf1_uplink1_to_fw1 and item.leaf1.uplink_1_name
+
+- name: create Logical Interface Profile 1 of 4 (38x1)
+  aci_rest:
+    host: '{{ aci_hostname }}'
+    username: '{{ aci_username }}'
+    password: '{{ aci_password }}'
+    validate_certs: '{{ aci_validate_certs | default(false) }}'
+    use_ssl: '{{ aci_use_ssl | default(true) }}'
+    use_proxy: '{{ aci_use_proxy | default(true) }}'
+    output_level: normal
+    method: post
+    path: /api/node/mo/uni/tn-{{ aci_tenant }}/out-{{ item.l3out_name }}/lnodep-sw{{ item.leaf1.node_id }}-NodePrfl/lifp-{{ item.leaf1.uplink_1_name }}.json
+    src: ./temp_json_files/logical_int_profile1.txt
+  when: if_pol_exists.totalCount == 0 and item.ports_leaf1_uplink1_to_fw1 and item.leaf1.uplink_1_name
+
+- name: Query to see if Logical Interface Profile 2 of 4 ALREADY EXISTS
+  aci_rest:
+    host: '{{ aci_hostname }}'
+    username: '{{ aci_username }}'
+    password: '{{ aci_password }}'
+    validate_certs: '{{ aci_validate_certs | default(false) }}'
+    use_ssl: '{{ aci_use_ssl | default(true) }}'
+    use_proxy: '{{ aci_use_proxy | default(true) }}'
+    output_level: normal
+    method: get
+    path: /api/node/mo/uni/tn-{{ aci_tenant }}/out-{{ item.l3out_name }}/lnodep-sw{{ item.leaf1.node_id }}-NodePrfl/lifp-{{ item.leaf1.uplink_2_name }}.json
+  register: if_pol_exists
+
+- name: print status message
+  debug:
+     msg: "Logical Interface Profile does not exist - creating..."
+  when: if_pol_exists.totalCount == 0 and item.ports_leaf1_uplink2_to_fw2
+
+- name: create Logical Interface Profile 2 of 4 (38x1) from JSON template
+  template:
+    src: ./templates_json/logical_int_profile.j2
+    dest: ./temp_json_files/logical_int_profile2.txt
+  vars:
+     current_leaf_node_id:   "{{ item.leaf1.node_id }}"
+     current_uplink_node_path: "{{ uplink2_3811_path }}"
+     current_ext_uplink_name: "{{ item.leaf1.uplink_2_name }}"
+     current_encap_vlan:  "{{ item.leaf1.uplink_2_encap_vlan }}"
+     current_link_ip:  "{{ item.leaf1.uplink_2_ip }}"
+     current_uplink_peer_ip: "{{ item.leaf1.uplink_2_peer }}"
+     need_sec_address:  "{{ item.leaf1.uplink_2_secondary }}"
+     sec_address:  "{{ item.leaf1.uplink_2_secondary }}"
+  when: if_pol_exists.totalCount == 0 and item.ports_leaf1_uplink2_to_fw2 and item.leaf1.uplink_2_name
+
+- name: create Logical Interface Profile 2 of 4 (38x1)
+  aci_rest:
+    host: '{{ aci_hostname }}'
+    username: '{{ aci_username }}'
+    password: '{{ aci_password }}'
+    validate_certs: '{{ aci_validate_certs | default(false) }}'
+    use_ssl: '{{ aci_use_ssl | default(true) }}'
+    use_proxy: '{{ aci_use_proxy | default(true) }}'
+    output_level: normal
+    method: post
+    path: /api/node/mo/uni/tn-{{ aci_tenant }}/out-{{ item.l3out_name }}/lnodep-sw{{ item.leaf1.node_id }}-NodePrfl/lifp-{{ item.leaf1.uplink_2_name }}.json
+    src: ./temp_json_files/logical_int_profile2.txt
+  when: if_pol_exists.totalCount == 0 and item.ports_leaf1_uplink2_to_fw2 and item.leaf1.uplink_2_name
+
+- name: Query to see if Logical Interface Profile 3 of 4 ALREADY EXISTS
+  aci_rest:
+    host: '{{ aci_hostname }}'
+    username: '{{ aci_username }}'
+    password: '{{ aci_password }}'
+    validate_certs: '{{ aci_validate_certs | default(false) }}'
+    use_ssl: '{{ aci_use_ssl | default(true) }}'
+    use_proxy: '{{ aci_use_proxy | default(true) }}'
+    output_level: normal
+    method: get
+    path: /api/node/mo/uni/tn-{{ aci_tenant }}/out-{{ item.l3out_name }}/lnodep-sw{{ item.leaf2.node_id }}-NodePrfl/lifp-{{ item.leaf2.uplink_1_name }}.json
+  register: if_pol_exists
+
+- name: print status message
+  debug:
+     msg: "Logical Interface Profile does not exist - creating..."
+  when: if_pol_exists.totalCount == 0 and item.ports_leaf2_uplink1_to_fw1
+
+- name: create Logical Interface Profile 3 of 4 (38x2) from JSON template
+  template:
+    src: ./templates_json/logical_int_profile.j2
+    dest: ./temp_json_files/logical_int_profile3.txt
+  vars:
+     current_leaf_node_id:   "{{ item.leaf2.node_id }}"
+     current_uplink_node_path: "{{ uplink1_3812_path }}"
+     current_ext_uplink_name: "{{ item.leaf2.uplink_1_name }}"
+     current_encap_vlan:  "{{ item.leaf2.uplink_1_encap_vlan }}"
+     current_link_ip:  "{{ item.leaf2.uplink_1_ip }}"
+     current_uplink_peer_ip: "{{ item.leaf2.uplink_1_peer }}"
+     need_sec_address:  "{{ item.leaf2.uplink_1_secondary }}"
+     sec_address:  "{{ item.leaf2.uplink_1_secondary }}"
+  when: if_pol_exists.totalCount == 0 and item.ports_leaf2_uplink1_to_fw1 and item.leaf2.uplink_1_name
+
+- name: create Logical Interface Profile 3 of 4 (38x2)
+  aci_rest:
+    host: '{{ aci_hostname }}'
+    username: '{{ aci_username }}'
+    password: '{{ aci_password }}'
+    validate_certs: '{{ aci_validate_certs | default(false) }}'
+    use_ssl: '{{ aci_use_ssl | default(true) }}'
+    use_proxy: '{{ aci_use_proxy | default(true) }}'
+    output_level: normal
+    method: post
+    path: /api/node/mo/uni/tn-{{ aci_tenant }}/out-{{ item.l3out_name }}/lnodep-sw{{ item.leaf2.node_id }}-NodePrfl/lifp-{{ item.leaf2.uplink_1_name }}.json
+    src: ./temp_json_files/logical_int_profile3.txt
+  when: if_pol_exists.totalCount == 0 and item.ports_leaf2_uplink1_to_fw1 and item.leaf2.uplink_1_name
+
+- name: Query to see if Logical Interface Profile 4 of 4 ALREADY EXISTS
+  aci_rest:
+    host: '{{ aci_hostname }}'
+    username: '{{ aci_username }}'
+    password: '{{ aci_password }}'
+    validate_certs: '{{ aci_validate_certs | default(false) }}'
+    use_ssl: '{{ aci_use_ssl | default(true) }}'
+    use_proxy: '{{ aci_use_proxy | default(true) }}'
+    output_level: normal
+    method: get
+    path: /api/node/mo/uni/tn-{{ aci_tenant }}/out-{{ item.l3out_name }}/lnodep-sw{{ item.leaf2.node_id }}-NodePrfl/lifp-{{ item.leaf2.uplink_2_name }}.json
+  register: if_pol_exists
+
+- name: print status message
+  debug:
+     msg: "Logical Interface Profile does not exist - creating..."
+  when: if_pol_exists.totalCount == 0 and item.ports_leaf2_uplink2_to_fw2
+
+- name: create Logical Interface Profile 4 of 4 (38x2) from JSON template
+  template:
+    src: ./templates_json/logical_int_profile.j2
+    dest: ./temp_json_files/logical_int_profile4.txt
+  vars:
+     current_leaf_node_id:   "{{ item.leaf2.node_id }}"
+     current_uplink_node_path: "{{ uplink2_3812_path }}"
+     current_ext_uplink_name: "{{ item.leaf2.uplink_2_name }}"
+     current_encap_vlan:  "{{ item.leaf2.uplink_2_encap_vlan }}"
+     current_link_ip:  "{{ item.leaf2.uplink_2_ip }}"
+     current_uplink_peer_ip: "{{ item.leaf2.uplink_2_peer }}"
+     need_sec_address:  "{{ item.leaf2.uplink_2_secondary }}"
+     sec_address:  "{{ item.leaf2.uplink_2_secondary }}"
+  when: if_pol_exists.totalCount == 0 and item.ports_leaf2_uplink2_to_fw2 and item.leaf2.uplink_2_name
+
+- name: create Logical Interface Profile 4 of 4 (38x2)
+  aci_rest:
+    host: '{{ aci_hostname }}'
+    username: '{{ aci_username }}'
+    password: '{{ aci_password }}'
+    validate_certs: '{{ aci_validate_certs | default(false) }}'
+    use_ssl: '{{ aci_use_ssl | default(true) }}'
+    use_proxy: '{{ aci_use_proxy | default(true) }}'
+    output_level: normal
+    method: post
+    path: /api/node/mo/uni/tn-{{ aci_tenant }}/out-{{ item.l3out_name }}/lnodep-sw{{ item.leaf2.node_id }}-NodePrfl/lifp-{{ item.leaf2.uplink_2_name }}.json
+    src: ./temp_json_files/logical_int_profile4.txt
+  when: if_pol_exists.totalCount == 0 and item.ports_leaf2_uplink2_to_fw2 and item.leaf2.uplink_2_name

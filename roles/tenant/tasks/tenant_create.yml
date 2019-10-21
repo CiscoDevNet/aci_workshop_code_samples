@@ -1,0 +1,20 @@
+---
+
+- name: generate REST context from json tempate
+  template:
+    src: ./templates_json/tenant.json.j2
+    dest: ./temp_json_files//tenant.txt
+
+- name: use REST module to create Tenant from json template
+  aci_rest:
+    host: '{{ aci_hostname }}'
+    username: '{{ aci_username }}'
+    password: '{{ aci_password }}'
+    validate_certs: '{{ aci_validate_certs | default(false) }}'
+    use_ssl: '{{ aci_use_ssl | default(true) }}'
+    use_proxy: '{{ aci_use_proxy | default(true) }}'
+    output_level: normal
+    method: post
+    path: /api/node/mo/uni/tn-{{ tenant_name }}.json
+    src:  ./temp_json_files//tenant.txt
+

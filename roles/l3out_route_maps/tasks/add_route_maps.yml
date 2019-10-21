@@ -1,0 +1,416 @@
+#
+# Author: Steve Heerensperger
+# cec:  sheerens
+#
+---
+
+- name: PROCESS NEXT L3OUT ROUTE-MAP
+  debug:
+    msg: " PROCESS NEXT L3OUT ROUTE-MAP - {{ l3out_dict.l3out_name }}"
+
+- name: Query to see if deny match rule already exists
+  aci_rest:
+    host: '{{ aci_hostname }}'
+    username: '{{ aci_username }}'
+    password: '{{ aci_password }}'
+    validate_certs: '{{ aci_validate_certs | default(false) }}'
+    use_ssl: '{{ aci_use_ssl | default(true) }}'
+    use_proxy: '{{ aci_use_proxy | default(true) }}'
+    output_level: normal
+    method: get
+    path: /api/node/mo/uni/tn-{{ tenant }}/subj-{{ l3out_dict.deny_rule_name }}-matchRule.json
+  register: deny_rule_exists
+
+- name: Add matchRule 1 - Deny
+  aci_rest:
+    host: '{{ aci_hostname }}'
+    username: '{{ aci_username }}'
+    password: '{{ aci_password }}'
+    validate_certs: '{{ aci_validate_certs | default(false) }}'
+    use_ssl: '{{ aci_use_ssl | default(true) }}'
+    use_proxy: '{{ aci_use_proxy | default(true) }}'
+    output_level: normal
+    method: post
+    path: /api/node/mo/uni/tn-{{ tenant }}/subj-{{ l3out_dict.deny_rule_name }}-matchRule.json
+    content:
+      {
+        "rtctrlSubjP": {
+          "attributes": {
+            "dn": "uni/tn-{{ tenant }}/subj-{{ l3out_dict.deny_rule_name }}-matchRule",
+            "name": "{{ l3out_dict.deny_rule_name }}-matchRule",
+            "rn": "subj-{{ l3out_dict.deny_rule_name }}-matchRule",
+            "status": "created"
+          },
+          "children": []
+        }
+      }
+  when: deny_rule_exists.totalCount == 0
+
+- name: Add matchRule 1 subnets - loop
+  aci_rest:
+    host: '{{ aci_hostname }}'
+    username: '{{ aci_username }}'
+    password: '{{ aci_password }}'
+    validate_certs: '{{ aci_validate_certs | default(false) }}'
+    use_ssl: '{{ aci_use_ssl | default(true) }}'
+    use_proxy: '{{ aci_use_proxy | default(true) }}'
+    output_level: normal
+    method: post
+    path: /api/node/mo/uni/tn-{{ tenant }}/subj-{{ l3out_dict.deny_rule_name }}-matchRule/dest-[{{ item }}].json
+    content:
+      {
+        "rtctrlMatchRtDest": {
+          "attributes": {
+            "dn": "uni/tn-{{ tenant }}/subj-{{ l3out_dict.deny_rule_name }}-matchRule/dest-[{{ item }}]",
+            "ip": "{{ item }}",
+            "status": "created",
+            "rn": "dest-[{{ item }}]"
+          },
+          "children": []
+        }
+      }
+  when: deny_rule_exists.totalCount == 0
+  with_items: "{{ l3out_dict.deny_prefixes}}"
+
+- name: Query to see if permit match rule 1 of 2 already exists
+  aci_rest:
+    host: '{{ aci_hostname }}'
+    username: '{{ aci_username }}'
+    password: '{{ aci_password }}'
+    validate_certs: '{{ aci_validate_certs | default(false) }}'
+    use_ssl: '{{ aci_use_ssl | default(true) }}'
+    use_proxy: '{{ aci_use_proxy | default(true) }}'
+    output_level: normal
+    method: get
+    path: /api/node/mo/uni/tn-{{ tenant }}/subj-{{ l3out_dict.permit_rule1_name }}-matchRule.json
+  register: permit_rule_1_exists
+
+
+- name: Add matchRule 2 - Permit community (excluding fw-internal-l3out)
+  aci_rest:
+    host: '{{ aci_hostname }}'
+    username: '{{ aci_username }}'
+    password: '{{ aci_password }}'
+    validate_certs: '{{ aci_validate_certs | default(false) }}'
+    use_ssl: '{{ aci_use_ssl | default(true) }}'
+    use_proxy: '{{ aci_use_proxy | default(true) }}'
+    output_level: normal
+    method: post
+    path: /api/node/mo/uni/tn-{{ tenant }}/subj-{{ l3out_dict.permit_rule1_name }}-matchRule.json
+    content:
+      {
+        "rtctrlSubjP": {
+          "attributes": {
+            "dn": "uni/tn-{{ tenant }}/subj-{{ l3out_dict.permit_rule1_name }}-matchRule",
+            "name": "{{ l3out_dict.permit_rule1_name }}-matchRule",
+            "rn": "subj-{{ l3out_dict.permit_rule1_name }}-matchRule",
+            "status": "created"
+          },
+          "children": [
+            {
+              "rtctrlMatchCommTerm": {
+                "attributes": {
+                  "dn": "uni/tn-{{ tenant }}/subj-{{ l3out_dict.permit_rule1_name }}-matchRule/commtrm-{{ l3out_dict.permit_rule1_name }}",
+                  "name": "{{ l3out_dict.permit_rule1_name }}",
+                  "rn": "commtrm-{{ l3out_dict.permit_rule1_name }}",
+                  "status": "created"
+                },
+                "children": [
+                  {
+                    "rtctrlMatchCommFactor": {
+                      "attributes": {
+                        "dn": "uni/tn-{{ tenant }}/subj-{{ l3out_dict.permit_rule1_name }}-matchRule/commtrm-{{ l3out_dict.permit_rule1_name }}/commfct-{{ l3out_dict.match_comm }}",
+                        "community": "{{ l3out_dict.match_comm }}",
+                        "rn": "commfct-{{ l3out_dict.match_comm }}",
+                        "status": "created"
+                      },
+                      "children": []
+                    }
+                  }
+                ]
+              }
+            }
+          ]
+        }
+      }
+  when: l3out_dict.l3out_name != 'fw-internal-l3Out' and permit_rule_1_exists.totalCount == 0
+
+- name: Add matchRule 2 - Permit community (fw-internal-l3out)
+  aci_rest:
+    host: '{{ aci_hostname }}'
+    username: '{{ aci_username }}'
+    password: '{{ aci_password }}'
+    validate_certs: '{{ aci_validate_certs | default(false) }}'
+    use_ssl: '{{ aci_use_ssl | default(true) }}'
+    use_proxy: '{{ aci_use_proxy | default(true) }}'
+    output_level: normal
+    method: post
+    path: /api/node/mo/uni/tn-{{ tenant }}/subj-{{ l3out_dict.permit_rule1_name }}-matchRule.json
+    content:
+      {
+        "rtctrlSubjP": {
+          "attributes": {
+            "dn": "uni/tn-{{ tenant }}/subj-{{ l3out_dict.permit_rule1_name }}-matchRule",
+            "name": "{{ l3out_dict.permit_rule1_name }}-matchRule",
+            "rn": "subj-{{ l3out_dict.permit_rule1_name }}-matchRule",
+            "status": "created"
+          },
+          "children": [
+            {
+              "rtctrlMatchRtDest": {
+                "attributes": {
+                  "dn": "uni/tn-{{ tenant }}/subj-{{ l3out_dict.permit_rule1_name }}-matchRule/dest-[0.0.0.0/0]",
+                  "ip": "0.0.0.0/0",
+                  "aggregate": "true",
+                  "rn": "dest-[0.0.0.0/0]",
+                  "status": "created"
+                },
+                "children": []
+              }
+            }
+          ]
+        }
+      }
+  when: l3out_dict.l3out_name == 'fw-internal-l3Out' and permit_rule_1_exists.totalCount == 0
+
+- name: Query to see if permit match rule 2 of 2 already exists
+  aci_rest:
+    host: '{{ aci_hostname }}'
+    username: '{{ aci_username }}'
+    password: '{{ aci_password }}'
+    validate_certs: '{{ aci_validate_certs | default(false) }}'
+    use_ssl: '{{ aci_use_ssl | default(true) }}'
+    use_proxy: '{{ aci_use_proxy | default(true) }}'
+    output_level: normal
+    method: get
+    path: /api/node/mo/uni/tn-{{ tenant }}/subj-{{ l3out_dict.permit_rule2_name }}-matchRule.json
+  register: permit_rule_2_exists
+  when: l3out_dict.l3out_name != 'fw-internal-l3Out'
+
+- name: Add matchRule 3 - Permit prefixes (excluding fw-internal-l3out)
+  aci_rest:
+    host: '{{ aci_hostname }}'
+    username: '{{ aci_username }}'
+    password: '{{ aci_password }}'
+    validate_certs: '{{ aci_validate_certs | default(false) }}'
+    use_ssl: '{{ aci_use_ssl | default(true) }}'
+    use_proxy: '{{ aci_use_proxy | default(true) }}'
+    output_level: normal
+    method: post
+    path: /api/node/mo/uni/tn-{{ tenant }}/subj-{{ l3out_dict.permit_rule2_name }}-matchRule.json
+    content:
+      {
+        "rtctrlSubjP": {
+          "attributes": {
+            "dn": "uni/tn-{{ tenant }}/subj-{{ l3out_dict.permit_rule2_name }}-matchRule",
+            "name": "{{ l3out_dict.permit_rule2_name }}-matchRule",
+            "rn": "subj-{{ l3out_dict.permit_rule2_name }}-matchRule",
+            "status": "created"
+          },
+          "children": []
+        }
+      }
+  when: l3out_dict.l3out_name != 'fw-internal-l3Out' and permit_rule_2_exists.totalCount == 0
+
+- name: Add matchRule 3 subnets - loop (excluding fw-internal-l3out)
+  aci_rest:
+    host: '{{ aci_hostname }}'
+    username: '{{ aci_username }}'
+    password: '{{ aci_password }}'
+    validate_certs: '{{ aci_validate_certs | default(false) }}'
+    use_ssl: '{{ aci_use_ssl | default(true) }}'
+    use_proxy: '{{ aci_use_proxy | default(true) }}'
+    output_level: normal
+    method: post
+    path: /api/node/mo/uni/tn-{{ tenant }}/subj-{{ l3out_dict.permit_rule2_name }}-matchRule/dest-[{{ item }}].json
+    content:
+      {
+        "rtctrlMatchRtDest": {
+          "attributes": {
+            "dn": "uni/tn-{{ tenant }}/subj-{{ l3out_dict.permit_rule2_name }}-matchRule/dest-[{{ item }}]",
+            "ip": "{{ item }}",
+            "status": "created",
+            "rn": "dest-[{{ item }}]"
+          },
+          "children": []
+        }
+      }
+  when: l3out_dict.l3out_name != 'fw-internal-l3Out' and permit_rule_2_exists.totalCount == 0
+  with_items: "{{ l3out_dict.permit_prefixes}}"
+
+- name: Query to see if route-map already exists
+  aci_rest:
+    host: '{{ aci_hostname }}'
+    username: '{{ aci_username }}'
+    password: '{{ aci_password }}'
+    validate_certs: '{{ aci_validate_certs | default(false) }}'
+    use_ssl: '{{ aci_use_ssl | default(true) }}'
+    use_proxy: '{{ aci_use_proxy | default(true) }}'
+    output_level: normal
+    method: get
+    path: /api/node/mo/uni/tn-{{ tenant }}/out-{{ l3out_dict.l3out_name }}/prof-default-export.json
+  register: route_map_exists
+
+- name: Create and Apply route map (excluding fw-internal-l3out)
+  aci_rest:
+    host: '{{ aci_hostname }}'
+    username: '{{ aci_username }}'
+    password: '{{ aci_password }}'
+    validate_certs: '{{ aci_validate_certs | default(false) }}'
+    use_ssl: '{{ aci_use_ssl | default(true) }}'
+    use_proxy: '{{ aci_use_proxy | default(true) }}'
+    output_level: normal
+    method: post
+    path: /api/node/mo/uni/tn-{{ tenant }}/out-{{ l3out_dict.l3out_name }}/prof-default-export.json
+    content:
+      {
+        "rtctrlProfile": {
+          "attributes": {
+            "dn": "uni/tn-{{ tenant }}/out-{{ l3out_dict.l3out_name }}/prof-default-export",
+            "name": "default-export",
+            "type": "global",
+            "rn": "prof-default-export",
+            "status": "created"
+          },
+          "children": [
+            {
+              "rtctrlCtxP": {
+                "attributes": {
+                  "dn": "uni/tn-{{ tenant }}/out-{{ l3out_dict.l3out_name }}/prof-default-export/ctx-deny-prefixes",
+                  "name": "deny-prefixes",
+                  "action": "deny",
+                  "rn": "ctx-deny-prefixes",
+                  "status": "created"
+                },
+                "children": [
+                  {
+                    "rtctrlRsCtxPToSubjP": {
+                      "attributes": {
+                        "tnRtctrlSubjPName": "{{ l3out_dict.deny_rule_name }}-matchRule",
+                        "status": "created"
+                      },
+                      "children": []
+                    }
+                  }
+                ]
+              }
+            },
+            {
+              "rtctrlCtxP": {
+                "attributes": {
+                  "dn": "uni/tn-{{ tenant }}/out-{{ l3out_dict.l3out_name }}/prof-default-export/ctx-permit-prefixes",
+                  "order": "4",
+                  "name": "permit-prefixes",
+                  "rn": "ctx-permit-prefixes",
+                  "status": "created"
+                },
+                "children": [
+                  {
+                    "rtctrlRsCtxPToSubjP": {
+                      "attributes": {
+                        "tnRtctrlSubjPName": "{{ l3out_dict.permit_rule2_name }}-matchRule",
+                        "status": "created"
+                      },
+                      "children": []
+                    }
+                  }
+                ]
+              }
+            },
+            {
+              "rtctrlCtxP": {
+                "attributes": {
+                  "dn": "uni/tn-{{ tenant }}/out-{{ l3out_dict.l3out_name }}/prof-default-export/ctx-permit-prefixes-comm",
+                  "order": "2",
+                  "name": "permit-prefixes-comm",
+                  "rn": "ctx-permit-prefixes-comm",
+                  "status": "created"
+                },
+                "children": [
+                  {
+                    "rtctrlRsCtxPToSubjP": {
+                      "attributes": {
+                        "tnRtctrlSubjPName": "{{ l3out_dict.permit_rule1_name }}-matchRule",
+                        "status": "created"
+                      },
+                      "children": []
+                    }
+                  }
+                ]
+              }
+            }
+          ]
+        }
+      }
+  when: l3out_dict.l3out_name != 'fw-internal-l3Out' and route_map_exists.totalCount == 0
+
+- name: Create and Apply route map (fw-internal-l3out)
+  aci_rest:
+    host: '{{ aci_hostname }}'
+    username: '{{ aci_username }}'
+    password: '{{ aci_password }}'
+    validate_certs: '{{ aci_validate_certs | default(false) }}'
+    use_ssl: '{{ aci_use_ssl | default(true) }}'
+    use_proxy: '{{ aci_use_proxy | default(true) }}'
+    output_level: normal
+    method: post
+    path: /api/node/mo/uni/tn-{{ tenant }}/out-{{ l3out_dict.l3out_name }}/prof-default-export.json
+    content:
+      {
+        "rtctrlProfile": {
+          "attributes": {
+            "dn": "uni/tn-{{ tenant }}/out-{{ l3out_dict.l3out_name }}/prof-default-export",
+            "name": "default-export",
+            "type": "global",
+            "rn": "prof-default-export",
+            "status": "created"
+          },
+          "children": [
+            {
+              "rtctrlCtxP": {
+                "attributes": {
+                  "dn": "uni/tn-{{ tenant }}/out-{{ l3out_dict.l3out_name }}/prof-default-export/ctx-deny-prefixes",
+                  "action": "deny",
+                  "name": "deny-prefixes",
+                  "rn": "ctx-deny-prefixes",
+                  "status": "created"
+                },
+                "children": [
+                  {
+                    "rtctrlRsCtxPToSubjP": {
+                      "attributes": {
+                        "tnRtctrlSubjPName": "{{ l3out_dict.deny_rule_name }}-matchRule",
+                        "status": "created"
+                      },
+                      "children": []
+                    }
+                  }
+                ]
+              }
+            },
+            {
+              "rtctrlCtxP": {
+                "attributes": {
+                  "dn": "uni/tn-{{ tenant }}/out-{{ l3out_dict.l3out_name }}/prof-default-export/ctx-permit-prefixes",
+                  "order": "2",
+                  "name": "permit-prefixes",
+                  "rn": "ctx-permit-prefixes",
+                  "status": "created"
+                },
+                "children": [
+                  {
+                    "rtctrlRsCtxPToSubjP": {
+                      "attributes": {
+                        "tnRtctrlSubjPName": "{{ l3out_dict.permit_rule1_name }}-matchRule",
+                        "status": "created"
+                      },
+                      "children": []
+                    }
+                  }
+                ]
+              }
+            }
+          ]
+        }
+      }
+  when: l3out_dict.l3out_name == 'fw-internal-l3Out' and route_map_exists.totalCount == 0

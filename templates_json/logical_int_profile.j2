@@ -1,0 +1,99 @@
+      {
+        "l3extLIfP": {
+          "attributes": {
+            "dn": "uni/tn-{{ aci_tenant  }}/out-{{ item.l3out_name }}/lnodep-sw{{ current_leaf_node_id }}-NodePrfl/lifp-{{ current_ext_uplink_name }}",
+            "name": "{{ current_ext_uplink_name }}",
+            "rn": "lifp-{{ current_ext_uplink_name }}",
+            "status": "created"
+          },
+          "children": [
+          {% if eigrp_routing %}
+            {
+              "eigrpIfP": {
+                "attributes": {
+                  "dn": "uni/tn-{{ aci_tenant  }}/out-{{ item.l3out_name }}/lnodep-sw{{ current_leaf_node_id }}-NodePrfl/lifp-{{ current_ext_uplink_name }}/eigrpIfP",
+                  "rn": "eigrpIfP",
+                  "status": "{{ eigrp_status1 }}"
+                },
+                "children": [
+                  {
+                    "eigrpRsIfPol": {
+                      "attributes": {
+                        "tnEigrpIfPolName": "default",
+                        "status": "{{ eigrp_status2 }}"
+                      },
+                      "children": []
+                    }
+                  }
+                ]
+              }
+            },
+          {% endif %}
+            {
+              "l3extRsPathL3OutAtt": {
+                "attributes": {
+                  "dn": "uni/tn-{{ aci_tenant  }}/out-{{ item.l3out_name }}/lnodep-sw{{ current_leaf_node_id }}-NodePrfl/lifp-{{ current_ext_uplink_name }}/rspathL3OutAtt-[topology/pod-1/paths-{{ current_leaf_node_id }}/pathep-[{{current_uplink_node_path}}]]",
+                  "mac": "00:22:BD:F8:19:FF",
+                  "ifInstT": "ext-svi",
+                  "encap": "vlan-{{ current_encap_vlan }}",
+                  "addr": "{{ current_link_ip }}",
+                  "tDn": "topology/pod-1/paths-{{ current_leaf_node_id }}/pathep-[{{current_uplink_node_path}}]",
+                  "rn": "rspathL3OutAtt-[topology/pod-1/paths-{{ current_leaf_node_id }}/pathep-[{{current_uplink_node_path}}]]",
+                  "status": "created"
+                },
+                "children": [
+                {% if bgp_routing %}
+                  {
+                    "bgpPeerP": {
+                      "attributes": {
+                        "dn": "uni/tn-{{ aci_tenant  }}/out-{{ item.l3out_name }}/lnodep-sw{{ current_leaf_node_id }}-NodePrfl/lifp-{{ current_ext_uplink_name }}/rspathL3OutAtt-[topology/pod-1/paths-{{ current_leaf_node_id }}/pathep-[{{current_uplink_node_path}}]]/peerP-[{{ current_uplink_peer_ip }}]",
+                        "addr": "{{ current_uplink_peer_ip }}",
+                        "ctrl": "allow-self-as",
+                        "allowedSelfAsCnt": "1",
+                        "rn": "peerP-[{{ current_uplink_peer_ip }}]",
+                        "status": "created"
+                      },
+                      "children": [
+                        {
+                          "bgpAsP": {
+                            "attributes": {
+                              "dn": "uni/tn-{{ aci_tenant  }}/out-{{ item.l3out_name }}/lnodep-sw{{ current_leaf_node_id }}-NodePrfl/lifp-{{ current_ext_uplink_name }}/rspathL3OutAtt-[topology/pod-1/paths-{{ current_leaf_node_id }}/pathep-[{{current_uplink_node_path}}]]/peerP-[{{ current_uplink_peer_ip }}]/as",
+                              "asn": "{{ item.l3out_bgp_remote_as}}",
+                              "rn": "as",
+                              "status": "created"
+                            },
+                            "children": []
+                          }
+                        },
+                        {
+                          "bgpLocalAsnP": {
+                            "attributes": {
+                              "dn": "uni/tn-{{ aci_tenant  }}/out-{{ item.l3out_name }}/lnodep-sw{{ current_leaf_node_id }}-NodePrfl/lifp-{{ current_ext_uplink_name }}/rspathL3OutAtt-[topology/pod-1/paths-{{ current_leaf_node_id }}/pathep-[{{current_uplink_node_path}}]]/peerP-[{{ current_uplink_peer_ip }}]/localasn",
+                              "localAsn": "{{ item.l3out_bgp_local_as }}",
+                              "rn": "localasn",
+                              "status": "created"
+                            },
+                            "children": []
+                          }
+                        }
+                      ]
+                    }
+                  },
+                {% endif %}
+                {% if need_sec_address %}
+                  {
+                    "l3extIp": {
+                      "attributes": {
+                        "addr": "{{ sec_address }}",
+                        "status": "created"
+                      },
+                      "children": []
+                    }
+                  }
+                {% endif %}
+                  ]
+              }
+            }
+          ]
+        }
+      }

@@ -1,0 +1,40 @@
+site_code: sjc
+fabric: 1
+
+outband_gw: 192.168.1.1/24
+
+datetime_format:
+  site_tz: p120_Europe-Brussels
+  offset_state: enabled
+  display_format: local
+
+inband:
+  gateway: 192.168.2.1/24
+  tenant: mgmt
+  bd: inb
+  vlan: 10
+  scope: public
+
+switches:
+  Spines:
+    -
+      node: 201
+      location: acisim
+      serial: TEP-1-103
+      inband: 192.168.2.2
+      outband: 192.168.1.2
+
+  Leafs:
+    101:
+      -
+        node: 101
+        location: acisim
+        serial: TEP-1-101
+        inband: 192.168.2.4
+        outband: 192.168.1.4
+      -
+        node: 102
+        location: acisim
+        serial: TEP-1-102
+        inband: 192.168.2.5
+        outband: 192.168.1.5

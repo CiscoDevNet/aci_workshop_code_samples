@@ -1,0 +1,101 @@
+---
+- hosts: localhost
+  gather_facts: no
+
+  vars_prompt:
+    - name: "aci_username"
+      prompt: "Logging into {{ aci_hostname }} - Enter USERNAME"
+      private: no
+    - name: "aci_password"
+      prompt: "Logging into {{ aci_hostname }} - Enter PASSWORD"
+      private: yes
+
+
+  tasks:
+
+    - name: initialize results list for entire set of L3Outs (needs to be done prior to entering loop)
+      set_fact:
+        pre_check_results: []
+        post_check_results: []
+      tags:
+        - validate_input
+
+    - name: creating a Leaf Interface Profile 1 of 2 with description
+      aci_rest:
+        host: '{{ aci_hostname }}'
+        username: '{{ aci_username }}'
+        password: '{{ aci_password }}'
+        validate_certs: '{{ aci_validate_certs | default(false) }}'
+        use_ssl: '{{ aci_use_ssl | default(true) }}'
+        use_proxy: '{{ aci_use_proxy | default(true) }}'
+        output_level: normal
+        method: post
+        path: /api/node/mo/uni/infra/accportprof-sw3823-IfPrfl.json
+        content:
+          {
+            "infraAccPortP": {
+              "attributes": {
+                "dn": "uni/infra/accportprof-sw3823-IfPrfl",
+                "name": "sw3823-IfPrfl",
+                "rn": "accportprof-sw3823-IfPrfl",
+                "status": "created,modified"
+              },
+              "children": []
+            }
+          }
+      delegate_to: localhost
+
+    - name: creating a Leaf Interface Profile 2 of 2 with description
+      aci_rest:
+        host: '{{ aci_hostname }}'
+        username: '{{ aci_username }}'
+        password: '{{ aci_password }}'
+        validate_certs: '{{ aci_validate_certs | default(false) }}'
+        use_ssl: '{{ aci_use_ssl | default(true) }}'
+        use_proxy: '{{ aci_use_proxy | default(true) }}'
+        output_level: normal
+        method: post
+        path: /api/node/mo/uni/infra/accportprof-sw3824-IfPrfl.json
+        content:
+          {
+            "infraAccPortP": {
+              "attributes": {
+                "dn": "uni/infra/accportprof-sw3824-IfPrfl",
+                "name": "sw3824-IfPrfl",
+                "rn": "accportprof-sw3824-IfPrfl",
+                "status": "created,modified"
+              },
+              "children": []
+            }
+          }
+      delegate_to: localhost
+
+    - include_role:
+        name: l3out_complete
+        tasks_from: l3out_complete-demo.yml
+      tags:
+        - validate_input
+      loop: "{{ l3outs }}"
+
+    - name: print pre-check list - if run with validate_input tag
+      debug:
+        var:  hostvars['localhost'].pre_check_results
+      tags: ['validate_input', 'never']
+
+    - include_role:
+        name: epg_create
+        tasks_from: epg_create.yml
+      vars:
+        epg_dict: "{{ epg_dict_dmz }}"
+      when:  create_dmz_epg_inter_fw_link
+
+    - include_role:
+        name: epg_create
+        tasks_from: epg_create.yml
+      vars:
+        epg_dict: "{{ epg_dict_sdmz }}"
+      when:  create_sdmz_epg_inter_fw_link
+
+    - name: print post-check list
+      debug:
+        var:  hostvars['localhost'].post_check_results

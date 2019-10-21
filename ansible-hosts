@@ -1,0 +1,6 @@
+[all:vars]
+ansible_python_interpreter=/usr/bin/python
+# ansible_python_interpreter=$HOME/aci-workshop/bin/python
+
+[local]
+localhost  ansible_connection=local

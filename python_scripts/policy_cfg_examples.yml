@@ -1,0 +1,173 @@
+tenants:
+  -
+    name: 'steve_tenant'
+
+    l3Outs:
+      -
+        name: 'l3Out-name'
+        external-networks:
+          -
+            name: 'extNet-name1'
+            range:
+              - 10.0.0.0/8
+              - 20.0.0.0/8
+            contracts:
+              provide:
+                - 'contract1'
+                - 'contract2'
+              consume:
+                - 'contract1'
+                - 'contract2'
+              consume-imported:
+                - 'contract1'
+                - 'contract2'
+          -
+            name: 'extNet-name2'
+            range:
+              - 10.0.0.0/8
+              - 20.0.0.0/8
+            contracts:
+              provide:
+                - 'contract1'
+                - 'contract2'
+              consume:
+                - 'contract1'
+                - 'contract2'
+              consume-imported:
+                - 'contract1'
+                - 'contract2'
+    vrfs:
+      -
+        name: 'vrf-name1'
+        contracts:
+          provide:
+            - 'contract1'
+            - 'contract2'
+          consume:
+            - 'contract1'
+            - 'contract2'
+      -
+        name: 'vrf-name2'
+        contracts:
+          provide:
+            - 'contract1'
+            - 'contract2'
+          consume:
+            - 'contract1'
+            - 'contract2'
+
+    filters:
+      -
+        name: 'filter_name1'
+        entries:
+          -
+            name: 'entry_name'
+            protocol: 'tcp'                     # other examples ['tcp', 'udp', icmp]
+            dst-start: '1'                      # Port range 'start from'
+            dst-end: '1'                        # Port range 'end at'
+      -
+        name: 'filter_name2'
+        entries:
+          -
+            name: 'entry_name'
+            protocol: 'tcp'                     # other examples ['tcp', 'udp', icmp]
+            dst-start: '2'                      # Port range 'start from'
+            dst-end: '2'                        # Port range 'end at'
+
+
+    contracts:
+      -
+        name: 'contract_name1'
+        description: ''
+        scope: 'context'                        # ['context', 'global', 'tenant'] context = private
+        export-to:                              # Export this contract to other Tenants for other EPGs to consume
+          - 'tenant_name_1'
+          - 'tenant_name_2'
+        subjects:
+          -
+            name: 'subject_name1'
+            both-directions: True               # [True, False] Traffic can originate from either EPG
+            filters:
+              - 'filter_name1'
+
+          -
+            name: 'subject_name2'
+            both-directions: False              # [True, False] Traffic can originate from either EPG
+            filtersIntoEPG:                     # From consumer to provider (ie: into the EPG)
+              - 'filter_name1'
+            filtersOutOfEPG:                    # From provider to consumer (ie: out of EPG)
+              - 'filter_name2'
+
+
+    bridge-domains:
+      -
+        name: 'bride_domain_name'
+        description: ''
+        unknown-unicast: 'proxy'                # ['proxy', 'flood']
+        unknown-multicast: 'flood'              # ['flood', opt-flood]
+        arp-flood: 'no'                         # ['no', 'yes']
+        subnet-learning-only: 'no'              # ['no', 'yes'] Enforce subnet check for IP learning
+        vrf: 'vrf_name'                         # ['internal-vrf', 'dmz-vrf', 'simdmz-vrf']
+        subnets:
+          -
+            gateway-ip: '192.168.0.1/24'        # 'address/mask'
+            scope: 'private'                    # ['private', 'public']
+            preferred: 'no'                     # ['no', 'yes']
+        associated-l3-outs:
+          - 'L3-Out_name1'
+          - 'L3-Out_name2'
+
+
+    app-profiles:
+      -
+        name: 'app_profiles_name'
+        epgs:
+          -
+            name: 'epg_name1'
+            description: ''
+            bridge-domain: 'bride_domain_name'
+            physical-domain: 'physical_domain_name'       # Physical, L2, or L3 Doamin name
+            vmm-domains:
+              - 'vmm_domain_name1'                # Currently only works with VMWare VMM Domains
+              - 'vmm_domain_name2'                # Currently only works with VMWare VMM Domains
+            contracts:
+              provide:
+                - 'contract_name1'
+                - 'contract_name2'
+              consume:
+                - 'contract_name1'
+                - 'contract_name2'
+              consume-imported:                    # Imported contract has to already be in the Tenant for this to work
+                - 'contract_name1'
+                - 'contract_name2'
+          -
+            name: 'epg_name2'
+            description: ''
+            bridge-domain: 'bride_domain_name'
+            physical-domain: 'physical_domain_name'       # Physical, L2, or L3 Doamin name
+            l2-domain:  'l2-domain-name'           #used for L2 Extensions for HSRP cutovers during migrations
+            vmm-domains:
+              - 'vmm_domain_name1'                 # Currently only works with VMWare VMM Domains
+              - 'vmm_domain_name2'                 # Currently only works with VMWare VMM Domains
+            contracts:
+              provide:
+                - 'contract_name1'
+                - 'contract_name2'
+              consume:
+                - 'contract_name1'
+                - 'contract_name2'
+              consume-imported:                    # Imported contract has to already be in the Tenant for this to work
+                - 'contract_name1'
+                - 'contract_name2'
+            static-paths:
+                -
+                   name: 'switch1-switch2'      # leaf pair ex: 1011-1012
+                   polgrp: 'name-IfPolGrp'
+                   mode: 'untagged'           # regular(trunk)/native(access 802.1p)/untagged(access)
+                   vlan: 'vlan-xxx'
+                -
+                   name: 'switch1-switch2'     # leaf pair ex: 1011-1012
+                   polgrp: 'name-IfPolGrp'
+                   mode: 'untagged'             # regular(trunk)/native(access 802.1p)/untagged(access)
+                   vlan: 'vlan-xxx'
+               

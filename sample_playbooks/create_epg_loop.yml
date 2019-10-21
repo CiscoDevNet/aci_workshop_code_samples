@@ -1,0 +1,81 @@
+---
+- hosts: localhost
+  gather_facts: no
+
+  vars:
+    aci_hostname: 'svl-acisim-1.cisco.com'
+
+  vars_prompt:
+    - name: "aci_username"
+      prompt: "Logging into {{ aci_hostname }} - Enter USERNAME"
+      private: no
+    - name: "aci_password"
+      prompt: "Logging into {{ aci_hostname }} - Enter PASSWORD"
+      private: yes
+
+  tasks:
+
+    - name: Add a new tenant
+      aci_tenant:
+        host:     '{{ aci_hostname }}'
+        username: '{{ aci_username }}'
+        password: '{{ aci_password }}'
+        validate_certs: False
+        tenant: test-prod-tenant
+        description: tenant for prod
+        state: present
+      delegate_to: localhost
+
+    - name: Add a new AP
+      aci_ap:
+        host:     '{{ aci_hostname }}'
+        username: '{{ aci_username }}'
+        password: '{{ aci_password }}'
+        validate_certs: False
+        tenant: test-prod-tenant
+        ap: prod_ap
+        description: production ap
+        state: present
+      delegate_to: localhost
+
+    - name: Add a new EPG
+      aci_epg:
+        host:     '{{ aci_hostname }}'
+        username: '{{ aci_username }}'
+        password: '{{ aci_password }}'
+        validate_certs: False
+        tenant: test-prod-tenant
+        ap: prod_ap
+        epg: epg-web-servers
+        description: Web Intranet EPG
+        bd: prod_bd
+        preferred_group: no
+        state: present
+      delegate_to: localhost
+
+    - name: Add a bunch of new EPG
+      aci_epg:
+        host:     '{{ aci_hostname }}'
+        username: '{{ aci_username }}'
+        password: '{{ aci_password }}'
+        validate_certs: False
+        tenant: test-prod-tenant
+        ap: prod_ap
+        epg: '{{ item }}'
+        description: Web Intranet EPG
+        bd: prod_bd
+        preferred_group: no
+        state: present
+      delegate_to: localhost
+      loop:
+        - epg-1
+        - epg-2
+        - epg-3
+        - epg-4
+        - epg-5
+        - epg-6
+        - epg-7
+        - epg-8
+        - epg-9
+        - epg-10
+

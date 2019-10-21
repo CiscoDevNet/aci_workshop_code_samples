@@ -1,0 +1,160 @@
+---
+
+- name: See if contract name exists already
+  aci_contract:
+    host: '{{ aci_hostname }}'
+    username: '{{ aci_username }}'
+    password: '{{ aci_password }}'
+    validate_certs: '{{ aci_validate_certs | default(false) }}'
+    use_ssl: '{{ aci_use_ssl | default(true) }}'
+    use_proxy: '{{ aci_use_proxy | default(true) }}'
+    tenant:  '{{ aci_tenant }}'
+    contract:  '{{ item.vrf_contract_name }}'
+    scope: context
+    state: query
+  register: contract_found
+
+- name: error message
+  debug:
+    msg: CONTRACT ALREADY EXISTS - Skipping Creation but WILL APPLY to VRF
+  when: contract_found != []
+
+- name: Add a new contract
+  aci_contract:
+    host: '{{ aci_hostname }}'
+    username: '{{ aci_username }}'
+    password: '{{ aci_password }}'
+    validate_certs: '{{ aci_validate_certs | default(false) }}'
+    use_ssl: '{{ aci_use_ssl | default(true) }}'
+    use_proxy: '{{ aci_use_proxy | default(true) }}'
+    tenant:  '{{ aci_tenant }}'
+    contract:  '{{ item.vrf_contract_name }}'
+    scope: context
+    state: present
+  when: contract_found.current == [] and item.vrf_contract_name
+
+- name: Add a new contract subject
+  aci_contract_subject:
+    host: '{{ aci_hostname }}'
+    username: '{{ aci_username }}'
+    password: '{{ aci_password }}'
+    validate_certs: '{{ aci_validate_certs | default(false) }}'
+    use_ssl: '{{ aci_use_ssl | default(true) }}'
+    use_proxy: '{{ aci_use_proxy | default(true) }}'
+    tenant: '{{ aci_tenant }}'
+    contract: '{{ item.vrf_contract_name }}'
+    subject:  default
+    reverse_filter: yes
+    state: present
+  when: contract_found.current == [] and item.vrf_contract_name
+
+- name: Add a new contract subject to filter binding
+  aci_contract_subject_to_filter:
+    host: '{{ aci_hostname }}'
+    username: '{{ aci_username }}'
+    password: '{{ aci_password }}'
+    validate_certs: '{{ aci_validate_certs | default(false) }}'
+    use_ssl: '{{ aci_use_ssl | default(true) }}'
+    use_proxy: '{{ aci_use_proxy | default(true) }}'
+    tenant: '{{ aci_tenant }}'
+    contract: '{{ item.vrf_contract_name }}'
+    subject: default
+    filter: default
+    state: present
+  when: contract_found.current == [] and item.vrf_contract_name
+
+- name: check existence of VRF
+  aci_rest:
+    host: '{{ aci_hostname }}'
+    username: '{{ aci_username }}'
+    password: '{{ aci_password }}'
+    validate_certs: '{{ aci_validate_certs | default(false) }}'
+    use_ssl: '{{ aci_use_ssl | default(true) }}'
+    use_proxy: '{{ aci_use_proxy | default(true) }}'
+    output_level: normal
+    method: get
+    path: /api/node/mo/uni/tn-{{ aci_tenant }}/ctx-{{ item.vrf_name }}.json
+  register: vrf_found
+
+- name: VRF - Not found but should exist
+  debug:
+    msg: "VRF {{ item.vrf_name }} does NOT exist, please define"
+  when:  vrf_found.totalCount == 0
+
+- name: query if contract applied to VRF - provide
+  aci_rest:
+    host: '{{ aci_hostname }}'
+    username: '{{ aci_username }}'
+    password: '{{ aci_password }}'
+    validate_certs: '{{ aci_validate_certs | default(false) }}'
+    use_ssl: '{{ aci_use_ssl | default(true) }}'
+    use_proxy: '{{ aci_use_proxy | default(true) }}'
+    output_level: normal
+    method: get
+    path: /api/node/mo/uni/tn-common/ctx-{{ item.vrf_name }}/any/rsanyToProv-{{ item.vrf_contract_name }}.json?query-target=self
+  when: vrf_found.totalCount == 1 and item.vrf_contract_name
+  register: provide_contract_found
+
+- name: apply contract to VRF - provide
+  aci_rest:
+    host: '{{ aci_hostname }}'
+    username: '{{ aci_username }}'
+    password: '{{ aci_password }}'
+    validate_certs: '{{ aci_validate_certs | default(false) }}'
+    use_ssl: '{{ aci_use_ssl | default(true) }}'
+    use_proxy: '{{ aci_use_proxy | default(true) }}'
+    output_level: normal
+    method: post
+    path: /api/node/mo/uni/tn-common/ctx-{{ item.vrf_name }}/any.json
+    content:
+      {
+        "vzRsAnyToProv": {
+          "attributes": {
+            "tnVzBrCPName": "{{ item.vrf_contract_name }}",
+            "status": "created"
+          },
+          "children": []
+        }
+      }
+  when: vrf_found.totalCount == 1 and item.vrf_contract_name and provide_contract_found.totalCount == 0
+  register: add_provide_contract
+  ignore_errors: True
+
+- name: query if contract applied to VRF - consume
+  aci_rest:
+    host: '{{ aci_hostname }}'
+    username: '{{ aci_username }}'
+    password: '{{ aci_password }}'
+    validate_certs: '{{ aci_validate_certs | default(false) }}'
+    use_ssl: '{{ aci_use_ssl | default(true) }}'
+    use_proxy: '{{ aci_use_proxy | default(true) }}'
+    output_level: normal
+    method: get
+    path: /api/node/mo/uni/tn-common/ctx-{{ item.vrf_name }}/any/rsanyToCons-{{ item.vrf_contract_name }}.json?query-target=self
+  when: vrf_found.totalCount == 1 and item.vrf_contract_name
+  register: consume_contract_found
+
+- name: apply contract to VRF - consume
+  aci_rest:
+    host: '{{ aci_hostname }}'
+    username: '{{ aci_username }}'
+    password: '{{ aci_password }}'
+    validate_certs: '{{ aci_validate_certs | default(false) }}'
+    use_ssl: '{{ aci_use_ssl | default(true) }}'
+    use_proxy: '{{ aci_use_proxy | default(true) }}'
+    output_level: normal
+    method: post
+    path: /api/node/mo/uni/tn-common/ctx-{{ item.vrf_name }}/any.json
+    content:
+      {
+        "vzRsAnyToCons": {
+          "attributes": {
+            "tnVzBrCPName": "{{ item.vrf_contract_name }}",
+            "status": "created"
+          },
+          "children": []
+        }
+      }
+  when: vrf_found.totalCount == 1 and item.vrf_contract_name and consume_contract_found.totalCount == 0
+  register: add_consume_contract
+  ignore_errors: True

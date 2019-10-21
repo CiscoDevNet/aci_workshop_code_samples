@@ -1,0 +1,222 @@
+adminhttp_redirect: enabled
+dyn_loadbalance_mode: conservative
+loadbalance_mode: traditional
+infra_vlan: 4
+ntp:
+  server: ntp.abc.com
+  epg: uni/tn-mgmt/mgmtp-default/oob-default
+
+dns:
+    server: dns.abc.com
+dns_domain: abc.com
+dns_domain_epg: uni/tn-mgmt/mgmtp-default/oob-default
+syslog_server: sys.abc.com
+splunk_server: syslog-net.abc.com
+
+power_policy:
+  -
+    name: default
+    mode: rdn
+
+link_level_pol:
+  -
+    name: 100M-IfPol
+    auto_neg: 'on'
+    speed: 100M
+  -
+    name: 40G-IfPol
+    auto_neg: 'on'
+    speed: 40G
+  -
+    name: 10G-IfPol
+    auto_neg: 'on'
+    speed: 10G
+  -
+    name: 1G-IfPol
+    auto_neg: 'on'
+    speed: 1G
+
+cdp_pol:
+  -
+    name: cdpEnabled-IfPol
+    admin_state: enabled
+  -
+    name: cdpDisabled-IfPol
+    admin_state: disabled
+
+lldp_pol:
+  -
+    name: lldpEnabled-IfPol
+    rx_state: enabled
+    tx_state: enabled
+  -
+    name: lldpDisable-IfPol
+    rx_state: disabled
+    tx_state: disabled
+
+lacp_pol:
+  -
+    name: lacpMacPin-IfPol
+    ctrl: fast-sel-hot-stdby,graceful-conv,susp-individual
+    min_links: 1
+    max_links: 16
+    mode: mac-pin
+  -
+    name: lacpActive-IfPol
+    ctrl: fast-sel-hot-stdby,graceful-conv,susp-individual
+    min_links: 1
+    max_links: 16
+    mode: active
+  -
+    name: lacpActive-noSuspend-IfPol
+    ctrl: fast-sel-hot-stdby,graceful-conv
+    min_links: 1
+    max_links: 16
+    mode: active
+
+stp_pol:
+  -
+    name: bpduGuardEnable-IfPol
+    ctrl: bpdu-guard
+  -
+    name: bpduGuardDisable-IfPol
+    ctrl:
+
+aep_prfl:
+  -
+    name: ucsStnd-AttEntPrfl
+    phys_dom: ucsStnd-physDom
+    infra: True
+  -
+    name: nasStnd-AttEntPrfl
+    phys_dom: nasStnd-physDom
+    infra: False
+  -
+    name: inband-AttEntPrfl
+    phys_dom: inband-physDom
+    infra: False
+  -
+    name: dccGw-AttEntPrfl
+    phys_dom: False
+    infra: False
+  -
+    name: ucsStndBM-AttEntPrfl
+    phys_dom: ucsStdnBM-physDom
+    infra: False
+
+phys_doms:
+  -
+    name: inband-physDom
+    vlan_pool_name: inband-vlanPool
+    vlan_pool_type: static
+  -
+    name: ucsStnd-physDom
+    vlan_pool_name: ucsStnd-vlanPool
+    vlan_pool_type: static
+  -
+    name: ucsStndBM-physDom
+    vlan_pool_name: ucsStndBM-vlanPool
+    vlan_pool_type: static
+  -
+    name: nasStnd-physDom
+    vlan_pool_name: nasStnd-vlanPool
+    vlan_pool_type: static
+
+vlan_pools:
+  -
+    name: inband-vlanPool
+    type: static
+    vlan_from: vlan-10
+    vlan_to: vlan-10
+    physdom_name: inband-physDom
+  -
+    name: ucsStnd-vlanPool
+    type: static
+    vlan_from: vlan-93
+    vlan_to: vlan-94
+    physdom_name: ucsStnd-physDom
+  -
+    name: ucsStnd-vlanPool
+    type: static
+    vlan_from: vlan-100
+    vlan_to: vlan-100
+    physdom_name: ucsStnd-physDom
+  -
+    name: ucsStnd-vlanPool
+    type: static
+    vlan_from: vlan-101
+    vlan_to: vlan-101
+    physdom_name: ucsStnd-physDom
+  -
+    name: ucsStnd-vlanPool
+    type: static
+    vlan_from: vlan-110
+    vlan_to: vlan-110
+    physdom_name: ucsStnd-physDom
+  -
+    name: ucsStnd-vlanPool
+    type: static
+    vlan_from: vlan-111
+    vlan_to: vlan-111
+    physdom_name: ucsStnd-physDom
+  -
+    name: nasStnd-vlanPool
+    type: static
+    vlan_from: vlan-150
+    vlan_to: vlan-159
+    physdom_name: nasStnd-phyDom
+  -
+    name: dccuplink-vlanPool
+    type: static
+    vlan_from: vlan-20
+    vlan_to: vlan-23
+    physdom_name: outside
+  -
+    name: dccuplink-vlanPool
+    type: static
+    vlan_from: vlan-24
+    vlan_to: vlan-24
+    physdom_name: outside
+  -
+    name: dccuplink-vlanPool
+    type: static
+    vlan_from: vlan-50
+    vlan_to: vlan-53
+    physdom_name: outside
+  -
+    name: dccuplink-vlanPool
+    type: static
+    vlan_from: vlan-61
+    vlan_to: vlan-64
+    physdom_name: outside
+  -
+    name: dccuplink-vlanPool
+    type: static
+    vlan_from: vlan-500
+    vlan_to: vlan-510
+    physdom_name: outside
+  -
+    name: ucsStndBM-vlanPool
+    type: static
+    vlan_from: vlan-825
+    vlan_to: vlan-825
+    physdom_name: ucsStndBM-phyDom
+  -
+    name: ucsStndBM-vlanPool
+    type: static
+    vlan_from: vlan-826
+    vlan_to: vlan-826
+    physdom_name: ucsStndBM-phyDom
+  -
+    name: ucsStndBM-vlanPool
+    type: static
+    vlan_from: vlan-827
+    vlan_to: vlan-827
+    physdom_name: ucsStndBM-phyDom
+  -
+    name: ucsStndBM-vlanPool
+    type: static
+    vlan_from: vlan-830
+    vlan_to: vlan-830
+    physdom_name: ucsStndBM-phyDom
+

@@ -1,0 +1,4 @@
+# include roles/l3Out/tasks/l3out_addition.yml
+- name: importing and executing vrf_permit_all_contract
+  import_tasks: vrf_permit_all_contract.yml
+  tags: vrf_permit_all_contract

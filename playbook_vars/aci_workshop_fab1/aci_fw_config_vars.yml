@@ -1,0 +1,801 @@
+---
+# Playbook vars - l3out - ACI Fabric - this test config uses non-existent switches 3823/3824 as test switches
+
+##############  Section 1 of 4  -  SITE SPECIFIC VARS ##############
+
+
+aci_hostname: 'svl-acisim-327.cisco.com'
+aci_validate_certs: no
+aci_use_ssl: yes
+aci_use_proxy: no
+
+aci_tenant:  'steve_tenant'
+
+##############  Section 2 of 4  -  LIST of L3OUTS to CREATE/MODIFY ##############
+
+# list of l3outs to create for DMZ FW solution
+l3outs:
+  - l3out_name:    firepower-internal-l3Out
+    l3out_exists:  False
+
+    #################  HIGH LEVEL VARS  #################
+
+    create_access_policies:      True   # vlan_pool, routed_domain, AEP, port_group, interface_selectors
+    create_node_lif_profiles:    True   # Node_Prfl and LIF_Prfl, and EIGRP int profiles
+    create_apply_vrf_contract:   True   # specific to DMZDC-FW solution, but can be used elsewhere
+
+    #################  ACCESS POLICIES  #################
+
+    vlan_pool_exists: False
+    vlan_pool_name:   dccuplink-vlanPool
+    new_vlan_encap_block: True
+    vlan_block_start: 511
+    vlan_block_end:   530
+
+    routed_domain_exists: False
+    routed_domain:        outside
+
+    aep_exists: False
+    aep:        firepower-AttEntPrfl
+
+    int_policy_group1_exists: False
+    int_policy_group1:        ftd-int-fw1-IfPolGrp    # border leaf to external_device_1 (ex: dcc1Uplink-IfPolGrp)
+
+    int_policy_group2_exists: False
+    int_policy_group2:        ftd-int-fw2-IfPolGrp    # border leaf to external_device_2 (ex: dcc2Uplink-IfPolGrp)
+
+    # ifPolGrp settings
+    link_level_policy: 40G-IfPol
+    cdp_policy:        cdpDisabled-IfPol
+    lldp_policy:       lldpDisable-IfPol
+    stp_int_policy:    bpduGuardEnable-IfPol
+    port_chann_policy: lacpActive-IfPol          # only applicable if port-channel
+
+    int_policy_group_type:  port-channel                # valid options:  'port' or 'port-channel'
+
+    leaf1_interface_profile:   sw3823-IfPrfl    # ex: sw3821-IfPrfl - THIS MUST EXIST - should match node_id below
+    leaf2_interface_profile:   sw3824-IfPrfl    # ex: sw3822-IfPrfl - THIS MUST EXIST - should match node_id below
+
+    interface_selectors_exist: False           # applying physical ports and IfPolGrp to leaf interface profiles
+
+    # uplinks from Border/Service Leafs to External Device (DCC, FW, etc)
+    ports_leaf1_uplink1_to_fw1: 1-2     # single port, or range like 10-11 ; enter False (or leave blank) if link is unused
+    ports_leaf1_uplink2_to_fw2: False       # single port, or range like 10-11 ; enter False (or leave blank) if link is unused
+    ports_leaf2_uplink1_to_fw1: False        # single port, or range like 10-11 ; enter False (or leave blank) if link is unused
+    ports_leaf2_uplink2_to_fw2: 1-2     # single port, or range like 10-11 ; enter False (or leave blank) if link is unused
+
+    #################  BASE L3OUT PARAMETERS  #################
+
+    tenant_name:  "{{ aci_tenant }}"    # assume Tenant exists
+
+    l3out_vrf_exists: False
+    vrf_name:        internal-vrf    # script assumes distinct VRF exists - otherwise be sure router-id matches existing VRF
+
+    vrf_contract_name: False  # enter False if not needed or exists (this is a permit all with default filter)
+
+    l3out_ext_nets:
+      - {name: 'internet-extNet', subnets: [0.0.0.0/0]}
+
+    # If you do NOT want to create ANY extNets, use -
+    #
+    # l3out_ext_nets:
+    #   - { subnets: [] }
+    #
+    #
+    # This is the format for creating new extNets -
+    #
+    # l3out_ext_nets:
+    #   - {name: 'internet-extNet', subnets: [0.0.0.0/0, 2.2.2.0/30]}
+    #   - {name: 'test-extNet', subnets: [3.4.1.0/30, 4.4.4.0/30]}
+
+    # selecting eigrp will configure routing process, EIGRP interface profiles, floating static routes on NodePrfl
+    # selecting bgp_default will configure bgp and add default route to uplink_peer_ip(s)
+    # selecting static creates default route to uplink_peer_ip(s)
+    l3out_routing_protocol:  bgp  # (lower case) eigrp, bgp, static, bgp_default, False.
+    l3out_eigrp_asn:    # ex: "90" - need quotes
+    l3out_bgp_remote_as: "64506"    # remote AS number
+    l3out_bgp_local_as:  "64504"    # my AS number
+
+    ##########  NODE AND LOGICAL INTERFACE PROFILES, AND L3OUT ROUTING  ##########
+
+    # Note: these 4 links should match interface selector section above (e.g. if a link unused, values can be left blank)
+    leaf1:
+       node_id:             3823
+       router_id:           192.168.1.62
+
+       uplink_1_name:       ftd1Uplink-lifPrfl
+       uplink_1_ip:         10.1.1.66/29
+       uplink_1_peer:       10.1.1.68        # this should MATCH leaf2/uplink_2_peer for DMZ FW design
+       uplink_1_encap_vlan: 511
+       uplink_1_secondary:  10.1.1.65/29       # enter False (or leave blank) if no secondary address
+       uplink_2_name:
+       uplink_2_ip:
+       uplink_2_peer:
+       uplink_2_encap_vlan:
+       uplink_2_secondary:                       # enter False (or leave blank) if no secondary address
+
+    leaf2:
+       node_id:             3824
+       router_id:           192.168.1.63
+
+       uplink_1_name:
+       uplink_1_ip:
+       uplink_1_peer:
+       uplink_1_encap_vlan:
+       uplink_1_secondary:                       # enter False (or leave blank) if no secondary address
+       uplink_2_name:       ftd2Uplink-lifPrfl
+       uplink_2_ip:         10.1.1.67/29
+       uplink_2_peer:       10.1.1.68       # this should MATCH leaf1/uplink_1_peer for DMZ FW design
+       uplink_2_encap_vlan: 511
+       uplink_2_secondary:  10.1.1.65/29       # enter False (or leave blank) if no secondary address
+
+
+
+###======================================== NEXT L3OUT ===========================================
+
+  - l3out_name:    firepower-protected-l3Out
+    l3out_exists:  False
+
+    #################  HIGH LEVEL VARS  #################
+
+    create_access_policies:      True   # vlan_pool, routed_domain, AEP, port_group, interface_selectors
+    create_node_lif_profiles:    True   # Node_Prfl and LIF_Prfl, and EIGRP int profiles
+    create_apply_vrf_contract:   True   # specific to DMZDC-FW solution, but can be used elsewhere
+
+    #################  ACCESS POLICIES  #################
+
+    vlan_pool_exists: True
+    vlan_pool_name:   dccuplink-vlanPool
+    new_vlan_encap_block: False
+    vlan_block_start:
+    vlan_block_end:
+
+    routed_domain_exists: True
+    routed_domain:        outside
+
+    aep_exists: True
+    aep:        firepower-AttEntPrfl
+
+    int_policy_group1_exists: False
+    int_policy_group1:        ftd-int-fw1-IfPolGrp  # border leaf to external_device_1 (ex: dcc1Uplink-IfPolGrp)
+
+    int_policy_group2_exists: False
+    int_policy_group2:        ftd-int-fw2-IfPolGrp  # border leaf to external_device_2 (ex: dcc2Uplink-IfPolGrp)
+
+    # ifPolGrp settings
+    link_level_policy: 40G-IfPol
+    cdp_policy:        cdpDisabled-IfPol
+    lldp_policy:       lldpDisable-IfPol
+    stp_int_policy:    bpduGuardEnable-IfPol
+    port_chann_policy: lacpActive-IfPol          # only applicable if port-channel
+
+    int_policy_group_type:  port-channel                # valid options:  'port' or 'port-channel'
+
+    leaf1_interface_profile:   sw3823-IfPrfl    # ex: sw3821-IfPrfl - THIS MUST EXIST - should match node_id below
+    leaf2_interface_profile:   sw3824-IfPrfl    # ex: sw3822-IfPrfl - THIS MUST EXIST - should match node_id below
+
+    interface_selectors_exist: True            # applying physical ports and IfPolGrp to leaf interface profiles
+
+    # uplinks from Border/Service Leafs to External Device (DCC, FW, etc)
+    ports_leaf1_uplink1_to_fw1: 1-2     # single port, or range like 10-11 ; enter False (or leave blank) if link is unused
+    ports_leaf1_uplink2_to_fw2: False   # single port, or range like 10-11 ; enter False (or leave blank) if link is unused
+    ports_leaf2_uplink1_to_fw1: False   # single port, or range like 10-11 ; enter False (or leave blank) if link is unused
+    ports_leaf2_uplink2_to_fw2: 1-2     # single port, or range like 10-11 ; enter False (or leave blank) if link is unused
+
+    #################  BASE L3OUT PARAMETERS  #################
+
+    tenant_name:  '{{ aci_tenant }}'    # assume Tenant exists
+
+    l3out_vrf_exists: False
+    vrf_name:         protected-vrf  # script assumes distinct VRF exists - otherwise be sure router-id matches existing VRF
+
+    vrf_contract_name: vrf.protected.all  # enter False if not needed (this is a permit all with default filter)
+
+    l3out_ext_nets:
+      - {name: 'internet-extNet', subnets: [0.0.0.0/0]}
+
+    # If you do NOT want to create ANY extNets, use -
+    #
+    # l3out_ext_nets:
+    #   - { subnets: [] }
+    #
+    #
+    # This is the format for creating new extNets -
+    #
+    # l3out_ext_nets:
+    #   - {name: 'internet-extNet', subnets: [0.0.0.0/0, 2.2.2.0/30]}
+    #   - {name: 'test-extNet', subnets: [3.4.1.0/30, 4.4.4.0/30]}
+
+    # selecting eigrp will configure routing process, EIGRP interface profiles, floating static routes on NodePrfl
+    # selecting bgp_default will configure bgp and add default route to uplink_peer_ip(s)
+    # selecting static creates default route to uplink_peer_ip(s)
+    l3out_routing_protocol:  bgp_default  # (lower case) eigrp, bgp, static, bgp_default, False.
+    l3out_eigrp_asn:    # ex: "90" - need quotes
+    l3out_bgp_remote_as: "64506"    # remote AS number
+    l3out_bgp_local_as:  "64503"    # my AS number
+
+    ##########  NODE AND LOGICAL INTERFACE PROFILES, AND L3OUT ROUTING  ##########
+
+    leaf1:
+       node_id:             3823
+       router_id:           192.168.1.64
+
+       uplink_1_name:       ftd1Uplink-lifPrfl
+       uplink_1_ip:         10.1.1.74/29
+       uplink_1_peer:       10.1.1.76        # this should MATCH leaf2/uplink_2_peer for DMZ FW design
+       uplink_1_encap_vlan: 512
+       uplink_1_secondary:  10.1.1.73/29       # enter False (or leave blank) if no secondary address
+       uplink_2_name:
+       uplink_2_ip:
+       uplink_2_peer:
+       uplink_2_encap_vlan:
+       uplink_2_secondary:                       # enter False (or leave blank) if no secondary address
+
+    leaf2:
+       node_id:             3824
+       router_id:           192.168.1.65
+
+       uplink_1_name:
+       uplink_1_ip:
+       uplink_1_peer:
+       uplink_1_encap_vlan:
+       uplink_1_secondary:                       # enter False (or leave blank) if no secondary address
+       uplink_2_name:       ftd2Uplink-lifPrfl
+       uplink_2_ip:         10.1.1.75/29
+       uplink_2_peer:       10.1.1.76       # this should MATCH leaf1/uplink_1_peer for DMZ FW design
+       uplink_2_encap_vlan: 512
+       uplink_2_secondary:  10.1.1.73/29       # enter False (or leave blank) if no secondary address
+
+###======================================== NEXT L3OUT ===========================================
+
+  - l3out_name:    firepower-dmz-l3Out
+    l3out_exists:  False
+
+    #################  HIGH LEVEL VARS  #################
+
+    create_access_policies:      True   # vlan_pool, routed_domain, AEP, port_group, interface_selectors
+    create_node_lif_profiles:    True   # Node_Prfl and LIF_Prfl, and EIGRP int profiles
+    create_apply_vrf_contract:   True   # specific to DMZDC-FW solution, but can be used elsewhere
+
+    #################  ACCESS POLICIES  #################
+
+    vlan_pool_exists: True
+    vlan_pool_name:   dccuplink-vlanPool
+    new_vlan_encap_block: False
+    vlan_block_start:
+    vlan_block_end:
+
+    routed_domain_exists: True
+    routed_domain:        outside
+
+    aep_exists: True
+    aep:        firepower-AttEntPrfl
+
+    int_policy_group1_exists: False
+    int_policy_group1:        ftd-dmz-fw1-IfPolGrp  # border leaf to external_device_1 (ex: dcc1Uplink-IfPolGrp)
+
+    int_policy_group2_exists: False
+    int_policy_group2:        ftd-dmz-fw2-IfPolGrp  # border leaf to external_device_2 (ex: dcc2Uplink-IfPolGrp)
+
+    # ifPolGrp settings
+    link_level_policy: 40G-IfPol
+    cdp_policy:        cdpDisabled-IfPol
+    lldp_policy:       lldpDisable-IfPol
+    stp_int_policy:    bpduGuardEnable-IfPol
+    port_chann_policy: lacpActive-IfPol          # only applicable if port-channel
+
+    int_policy_group_type:  port-channel                # valid options:  'port' or 'port-channel'
+
+    leaf1_interface_profile:   sw3823-IfPrfl    # ex: sw3821-IfPrfl - THIS MUST EXIST - should match node_id below
+    leaf2_interface_profile:   sw3824-IfPrfl    # ex: sw3822-IfPrfl - THIS MUST EXIST - should match node_id below
+
+    interface_selectors_exist: False            # applying physical ports and IfPolGrp to leaf interface profiles
+
+    # uplinks from Border/Service Leafs to External Device (DCC, FW, etc)
+    ports_leaf1_uplink1_to_fw1: 3-4     # single port, or range like 10-11 ; enter False (or leave blank) if link is unused
+    ports_leaf1_uplink2_to_fw2: False   # single port, or range like 10-11 ; enter False (or leave blank) if link is unused
+    ports_leaf2_uplink1_to_fw1: False   # single port, or range like 10-11 ; enter False (or leave blank) if link is unused
+    ports_leaf2_uplink2_to_fw2: 3-4     # single port, or range like 10-11 ; enter False (or leave blank) if link is unused
+
+    #################  BASE L3OUT PARAMETERS  #################
+
+#    tenant_name:  common    # assume Tenant exists
+
+    l3out_vrf_exists: False
+    vrf_name:         dmz-vrf  # script assumes distinct VRF exists - otherwise be sure router-id matches existing VRF
+
+    vrf_contract_name: vrf.dmz.all  # enter False if not needed (this is a permit all with default filter)
+
+    l3out_ext_nets:
+      - {name: 'internet-extNet', subnets: [0.0.0.0/0]}
+
+    # If you do NOT want to create ANY extNets, use -
+    #
+    # l3out_ext_nets:
+    #   - { subnets: [] }
+    #
+    # Otherwise use this format -
+    #
+    # l3out_ext_nets:
+    #   - {name: 'internet-extNet', subnets: [0.0.0.0/0, 2.2.2.0/30]}
+    #   - {name: 'test-extNet', subnets: [3.4.1.0/30, 4.4.4.0/30]}
+
+    # selecting eigrp will configure routing process, EIGRP interface profiles, floating static routes on NodePrfl
+    # selecting bgp_default will configure bgp and add default route to uplink_peer_ip(s)
+    # selecting static creates default route to uplink_peer_ip(s)
+    l3out_routing_protocol:  bgp  # (lower case) eigrp, bgp, static, bgp_default, False.
+    l3out_eigrp_asn:    # ex: "90" - need quotes
+    l3out_bgp_remote_as: "64505"    # remote AS number
+    l3out_bgp_local_as:  "64502"    # my AS number
+
+    ##########  NODE AND LOGICAL INTERFACE PROFILES, AND L3OUT ROUTING  ##########
+
+    leaf1:
+       node_id:             3823
+       router_id:           192.168.1.66
+
+       uplink_1_name:       ftd1Uplink-lifPrfl
+       uplink_1_ip:         10.1.1.98/29
+       uplink_1_peer:       10.1.1.100        # this should MATCH leaf2/uplink_2_peer for DMZ FW design
+       uplink_1_encap_vlan: 516
+       uplink_1_secondary:  10.1.1.97/29       # enter False (or leave blank) if no secondary address
+       uplink_2_name:
+       uplink_2_ip:
+       uplink_2_peer:
+       uplink_2_encap_vlan:
+       uplink_2_secondary:                       # enter False (or leave blank) if no secondary address
+
+    leaf2:
+       node_id:             3824
+       router_id:           192.168.1.67
+
+       uplink_1_name:
+       uplink_1_ip:
+       uplink_1_peer:
+       uplink_1_encap_vlan:
+       uplink_1_secondary:                       # enter False (or leave blank) if no secondary address
+       uplink_2_name:       ftd2Uplink-lifPrfl
+       uplink_2_ip:         10.1.1.99/29
+       uplink_2_peer:       10.1.1.100        # this should MATCH leaf1/uplink_1_peer for DMZ FW design
+       uplink_2_encap_vlan: 516
+       uplink_2_secondary:  10.1.1.97/29       # enter False (or leave blank) if no secondary address
+
+
+###======================================== NEXT L3OUT ===========================================
+
+  - l3out_name:    firepower-protected-dmz-l3Out
+    l3out_exists:  False
+
+    #################  HIGH LEVEL VARS  #################
+
+    create_access_policies:      True   # vlan_pool, routed_domain, AEP, port_group, interface_selectors
+    create_node_lif_profiles:    True   # Node_Prfl and LIF_Prfl, and EIGRP int profiles
+    create_apply_vrf_contract:   True   # specific to DMZDC-FW solution, but can be used elsewhere
+
+    #################  ACCESS POLICIES  #################
+
+    vlan_pool_exists: True
+    vlan_pool_name:   dccuplink-vlanPool
+    new_vlan_encap_block: False
+    vlan_block_start:
+    vlan_block_end:
+
+    routed_domain_exists: True
+    routed_domain:        outside
+
+    aep_exists: True
+    aep:        firepower-AttEntPrfl
+
+    int_policy_group1_exists: False
+    int_policy_group1:        ftd-dmz-fw1-IfPolGrp  # border leaf to external_device_1 (ex: dcc1Uplink-IfPolGrp)
+
+    int_policy_group2_exists: False
+    int_policy_group2:        ftd-dmz-fw2-IfPolGrp  # border leaf to external_device_2 (ex: dcc2Uplink-IfPolGrp)
+
+    # ifPolGrp settings
+    link_level_policy: 40G-IfPol
+    cdp_policy:        cdpDisabled-IfPol
+    lldp_policy:       lldpDisable-IfPol
+    stp_int_policy:    bpduGuardEnable-IfPol
+    port_chann_policy: lacpActive-IfPol          # only applicable if port-channel
+
+    int_policy_group_type:  port-channel                # valid options:  'port' or 'port-channel'
+
+    leaf1_interface_profile:   sw3823-IfPrfl    # ex: sw3821-IfPrfl - THIS MUST EXIST - should match node_id below
+    leaf2_interface_profile:   sw3824-IfPrfl    # ex: sw3822-IfPrfl - THIS MUST EXIST - should match node_id below
+
+    interface_selectors_exist: True            # applying physical ports and IfPolGrp to leaf interface profiles
+
+    # uplinks from Border/Service Leafs to External Device (DCC, FW, etc)
+    ports_leaf1_uplink1_to_fw1: 3-4     # single port, or range like 10-11 ; enter False (or leave blank) if link is unused
+    ports_leaf1_uplink2_to_fw2: False   # single port, or range like 10-11 ; enter False (or leave blank) if link is unused
+    ports_leaf2_uplink1_to_fw1: False   # single port, or range like 10-11 ; enter False (or leave blank) if link is unused
+    ports_leaf2_uplink2_to_fw2: 3-4     # single port, or range like 10-11 ; enter False (or leave blank) if link is unused
+
+    #################  BASE L3OUT PARAMETERS  #################
+
+#    tenant_name:  common    # assume Tenant exists
+
+    l3out_vrf_exists: False
+    vrf_name:         protected-dmz-vrf  # script assumes distinct VRF exists - otherwise be sure router-id matches existing VRF
+
+    vrf_contract_name: vrf.protected-dmz.all  # enter False if not needed (this is a permit all with default filter)
+
+    l3out_ext_nets:
+      - {name: 'internet-extNet', subnets: [0.0.0.0/0]}
+
+    # If you do NOT want to create ANY extNets, use -
+    #
+    # l3out_ext_nets:
+    #   - { subnets: [] }
+    #
+    #
+    # This is the format for creating new extNets -
+    #
+    # l3out_ext_nets:
+    #   - {name: 'internet-extNet', subnets: [0.0.0.0/0, 2.2.2.0/30]}
+    #   - {name: 'test-extNet', subnets: [3.4.1.0/30, 4.4.4.0/30]}
+
+    # selecting eigrp will configure routing process, EIGRP interface profiles, floating static routes on NodePrfl
+    # selecting bgp_default will configure bgp and add default route to uplink_peer_ip(s)
+    # selecting static creates default route to uplink_peer_ip(s)
+    l3out_routing_protocol:  bgp_default  # (lower case) eigrp, bgp, static, bgp_default, False.
+    l3out_eigrp_asn:    # ex: "90" - need quotes
+    l3out_bgp_remote_as: "64505"    # remote AS number
+    l3out_bgp_local_as:  "64501"    # my AS number
+
+    ##########  NODE AND LOGICAL INTERFACE PROFILES, AND L3OUT ROUTING  ##########
+
+    leaf1:
+       node_id:             3823
+       router_id:           192.168.1.68
+
+       uplink_1_name:       ftd1Uplink-lifPrfl
+       uplink_1_ip:         10.1.1.106/29
+       uplink_1_peer:       10.1.1.108        # this should MATCH leaf2/uplink_2_peer for DMZ FW design
+       uplink_1_encap_vlan: 515
+       uplink_1_secondary:  10.1.1.105/29       # enter False (or leave blank) if no secondary address
+       uplink_2_name:
+       uplink_2_ip:
+       uplink_2_peer:
+       uplink_2_encap_vlan:
+       uplink_2_secondary:                       # enter False (or leave blank) if no secondary address
+
+    leaf2:
+       node_id:             3824
+       router_id:           192.168.1.69
+
+       uplink_1_name:
+       uplink_1_ip:
+       uplink_1_peer:
+       uplink_1_encap_vlan:
+       uplink_1_secondary:                       # enter False (or leave blank) if no secondary address
+       uplink_2_name:       ftd2Uplink-lifPrfl
+       uplink_2_ip:         10.1.1.107/29
+       uplink_2_peer:       10.1.1.108        # this should MATCH leaf1/uplink_1_peer for DMZ FW design
+       uplink_2_encap_vlan: 515
+       uplink_2_secondary:  10.1.1.105/29       # enter False (or leave blank) if no secondary address
+
+
+
+####======================================== NEXT L3OUT ===========================================
+#
+#  - l3out_name:    firepower-sdmz-l3Out
+#    l3out_exists:  False
+#
+#    #################  HIGH LEVEL VARS  #################
+#
+#    create_access_policies:      True   # vlan_pool, routed_domain, AEP, port_group, interface_selectors
+#    create_node_lif_profiles:    True   # Node_Prfl and LIF_Prfl, and EIGRP int profiles
+#    create_apply_vrf_contract:   True   # specific to DMZDC-FW solution, but can be used elsewhere
+#
+#    #################  ACCESS POLICIES  #################
+#
+#    vlan_pool_exists: True
+#    vlan_pool_name:   dccuplink-vlanPool
+#    new_vlan_encap_block: False
+#    vlan_block_start:
+#    vlan_block_end:
+#
+#    routed_domain_exists: True
+#    routed_domain:        outside
+#
+#    aep_exists: True
+#    aep:        firepower-AttEntPrfl
+#
+#    int_policy_group1_exists: False
+#    int_policy_group1:        ftd-sdmz-fw1-IfPolGrp  # border leaf to external_device_1 (ex: dcc1Uplink-IfPolGrp)
+#
+#    int_policy_group2_exists: False
+#    int_policy_group2:        ftd-sdmz-fw2-IfPolGrp  # border leaf to external_device_2 (ex: dcc2Uplink-IfPolGrp)
+#
+#    # ifPolGrp settings
+#    link_level_policy: 40G-IfPol
+#    cdp_policy:        cdpDisabled-IfPol
+#    lldp_policy:       lldpDisable-IfPol
+#    stp_int_policy:    bpduGuardEnable-IfPol
+#    port_chann_policy: lacpActive-IfPol          # only applicable if port-channel
+#
+#    int_policy_group_type:  port-channel                # valid options:  'port' or 'port-channel'
+#
+#    leaf1_interface_profile:   sw3823-IfPrfl    # ex: sw3821-IfPrfl - THIS MUST EXIST - should match node_id below
+#    leaf2_interface_profile:   sw3824-IfPrfl    # ex: sw3822-IfPrfl - THIS MUST EXIST - should match node_id below
+#
+#    interface_selectors_exist: False            # applying physical ports and IfPolGrp to leaf interface profiles
+#
+#    # uplinks from Border/Service Leafs to External Device (DCC, FW, etc)
+#    ports_leaf1_uplink1_to_fw1: 5-6     # single port, or range like 10-11 ; enter False (or leave blank) if link is unused
+#    ports_leaf1_uplink2_to_fw2: False   # single port, or range like 10-11 ; enter False (or leave blank) if link is unused
+#    ports_leaf2_uplink1_to_fw1: False   # single port, or range like 10-11 ; enter False (or leave blank) if link is unused
+#    ports_leaf2_uplink2_to_fw2: 5-6     # single port, or range like 10-11 ; enter False (or leave blank) if link is unused
+#
+#    #################  BASE L3OUT PARAMETERS  #################
+#
+##    tenant_name:  common    # assume Tenant exists
+#
+#    l3out_vrf_exists: False
+#    vrf_name:         simdmz-vrf  # script assumes distinct VRF exists - otherwise be sure router-id matches existing VRF
+#
+#    vrf_contract_name: vrf.simdmz.all  # enter False if not needed (this is a permit all with default filter)
+#
+#    l3out_ext_nets:
+#      - {name: 'internet-extNet', subnets: [0.0.0.0/0]}
+#
+#    # If you do NOT want to create ANY extNets, use -
+#    #
+#    # l3out_ext_nets:
+#    #   - { subnets: [] }
+#    #
+#    #
+#    # This is the format for creating new extNets -
+#    #
+#    # l3out_ext_nets:
+#    #   - {name: 'internet-extNet', subnets: [0.0.0.0/0, 2.2.2.0/30]}
+#    #   - {name: 'test-extNet', subnets: [3.4.1.0/30, 4.4.4.0/30]}
+#
+#    # selecting eigrp will configure routing process, EIGRP interface profiles, floating static routes on NodePrfl
+#    # selecting bgp_default will configure bgp and add default route to uplink_peer_ip(s)
+#    # selecting static creates default route to uplink_peer_ip(s)
+#    l3out_routing_protocol:  bgp  # (lower case) eigrp, bgp, static, bgp_default, False.
+#    l3out_eigrp_asn:    # ex: "90" - need quotes
+#    l3out_bgp_remote_as: "64507"    # remote AS number
+#    l3out_bgp_local_as:  "64509"    # my AS number
+#
+#    ##########  NODE AND LOGICAL INTERFACE PROFILES, AND L3OUT ROUTING  ##########
+#
+#    leaf1:
+#       node_id:             3823
+#       router_id:           192.168.1.76
+#
+#       uplink_1_name:       ftd1Uplink-lifPrfl
+#       uplink_1_ip:         10.1.1.114/29
+#       uplink_1_peer:       10.1.1.116        # this should MATCH leaf2/uplink_2_peer for DMZ FW design
+#       uplink_1_encap_vlan: 519
+#       uplink_1_secondary:  10.1.1.113/29       # enter False (or leave blank) if no secondary address
+#       uplink_2_name:
+#       uplink_2_ip:
+#       uplink_2_peer:
+#       uplink_2_encap_vlan:
+#       uplink_2_secondary:                       # enter False (or leave blank) if no secondary address
+#
+#    leaf2:
+#       node_id:             3824
+#       router_id:           192.168.1.77
+#
+#       uplink_1_name:
+#       uplink_1_ip:
+#       uplink_1_peer:
+#       uplink_1_encap_vlan:
+#       uplink_1_secondary:                       # enter False (or leave blank) if no secondary address
+#       uplink_2_name:       ftd2Uplink-lifPrfl
+#       uplink_2_ip:         10.1.1.115/29
+#       uplink_2_peer:       10.1.1.116        # this should MATCH leaf1/uplink_1_peer for DMZ FW design
+#       uplink_2_encap_vlan: 519
+#       uplink_2_secondary:  10.1.1.113/29       # enter False (or leave blank) if no secondary address
+#
+#
+####======================================== NEXT L3OUT ===========================================
+#
+#  - l3out_name:    firepower-protected-sdmz-l3Out
+#    l3out_exists:  False
+#
+#    #################  HIGH LEVEL VARS  #################
+#
+#    create_access_policies:      True   # vlan_pool, routed_domain, AEP, port_group, interface_selectors
+#    create_node_lif_profiles:    True   # Node_Prfl and LIF_Prfl, and EIGRP int profiles
+#    create_apply_vrf_contract:   True   # specific to DMZDC-FW solution, but can be used elsewhere
+#
+#    #################  ACCESS POLICIES  #################
+#
+#    vlan_pool_exists: True
+#    vlan_pool_name:   dccuplink-vlanPool
+#    new_vlan_encap_block: False
+#    vlan_block_start:
+#    vlan_block_end:
+#
+#    routed_domain_exists: True
+#    routed_domain:        outside
+#
+#    aep_exists: True
+#    aep:        firepower-AttEntPrfl
+#
+#    int_policy_group1_exists: False
+#    int_policy_group1:        ftd-sdmz-fw1-IfPolGrp  # border leaf to external_device_1 (ex: dcc1Uplink-IfPolGrp)
+#
+#    int_policy_group2_exists: False
+#    int_policy_group2:        ftd-sdmz-fw2-IfPolGrp  # border leaf to external_device_2 (ex: dcc2Uplink-IfPolGrp)
+#
+#    # ifPolGrp settings
+#    link_level_policy: 40G-IfPol
+#    cdp_policy:        cdpDisabled-IfPol
+#    lldp_policy:       lldpDisable-IfPol
+#    stp_int_policy:    bpduGuardEnable-IfPol
+#    port_chann_policy: lacpActive-IfPol          # only applicable if port-channel
+#
+#    int_policy_group_type:  port-channel                # valid options:  'port' or 'port-channel'
+#
+#    leaf1_interface_profile:   sw3823-IfPrfl    # ex: sw3821-IfPrfl - THIS MUST EXIST - should match node_id below
+#    leaf2_interface_profile:   sw3824-IfPrfl    # ex: sw3822-IfPrfl - THIS MUST EXIST - should match node_id below
+#
+#    interface_selectors_exist: False            # applying physical ports and IfPolGrp to leaf interface profiles
+#
+#    # uplinks from Border/Service Leafs to External Device (DCC, FW, etc)
+#    ports_leaf1_uplink1_to_fw1: 5-6     # single port, or range like 10-11 ; enter False (or leave blank) if link is unused
+#    ports_leaf1_uplink2_to_fw2: False   # single port, or range like 10-11 ; enter False (or leave blank) if link is unused
+#    ports_leaf2_uplink1_to_fw1: False   # single port, or range like 10-11 ; enter False (or leave blank) if link is unused
+#    ports_leaf2_uplink2_to_fw2: 5-6     # single port, or range like 10-11 ; enter False (or leave blank) if link is unused
+#
+#    #################  BASE L3OUT PARAMETERS  #################
+#
+# #   tenant_name:  common   # assume Tenant exists
+#
+#    l3out_vrf_exists: False
+#    vrf_name:         protected-sdmz-vrf  # script assumes distinct VRF exists - otherwise be sure router-id matches existing VRF
+#
+#    vrf_contract_name: vrf.protected-sdmz.all  # enter False if not needed (this is a permit all with default filter)
+#
+#    l3out_ext_nets:
+#      - {name: 'internet-extNet', subnets: [0.0.0.0/0]}
+#
+#    # If you do NOT want to create ANY extNets, use -
+#    #
+#    # l3out_ext_nets:
+#    #   - { subnets: [] }
+#    #
+#    #
+#    # This is the format for creating new extNets -
+#    #
+#    # l3out_ext_nets:
+#    #   - {name: 'internet-extNet', subnets: [0.0.0.0/0, 2.2.2.0/30]}
+#    #   - {name: 'test-extNet', subnets: [3.4.1.0/30, 4.4.4.0/30]}
+#
+#    # selecting eigrp will configure routing process, EIGRP interface profiles, floating static routes on NodePrfl
+#    # selecting bgp_default will configure bgp and add default route to uplink_peer_ip(s)
+#    # selecting static creates default route to uplink_peer_ip(s)
+#    l3out_routing_protocol:  bgp_default  # (lower case) eigrp, bgp, static, bgp_default, False.
+#    l3out_eigrp_asn:                      # ex: "90" - need quotes
+#    l3out_bgp_remote_as: "64507"    # remote AS number
+#    l3out_bgp_local_as:  "64508"    # my AS number
+#
+#    ##########  NODE AND LOGICAL INTERFACE PROFILES, AND L3OUT ROUTING  ##########
+#
+#    leaf1:
+#       node_id:             3823
+#       router_id:           192.168.1.78
+#
+#       uplink_1_name:       ftd1Uplink-lifPrfl
+#       uplink_1_ip:         10.1.1.122/29
+#       uplink_1_peer:       10.1.1.124        # this should MATCH leaf2/uplink_2_peer for DMZ FW design
+#       uplink_1_encap_vlan: 518
+#       uplink_1_secondary:  10.1.1.121/29       # enter False (or leave blank) if no secondary address
+#       uplink_2_name:
+#       uplink_2_ip:
+#       uplink_2_peer:
+#       uplink_2_encap_vlan:
+#       uplink_2_secondary:                       # enter False (or leave blank) if no secondary address
+#
+#    leaf2:
+#       node_id:             3824
+#       router_id:           192.168.1.79
+#
+#       uplink_1_name:
+#       uplink_1_ip:
+#       uplink_1_peer:
+#       uplink_1_encap_vlan:
+#       uplink_1_secondary:                       # enter False (or leave blank) if no secondary address
+#       uplink_2_name:       ftd2Uplink-lifPrfl
+#       uplink_2_ip:         10.1.1.123/29
+#       uplink_2_peer:       10.1.1.124        # this should MATCH leaf1/uplink_1_peer for DMZ FW design
+#       uplink_2_encap_vlan: 518
+#       uplink_2_secondary:  10.1.1.121/29       # enter False (or leave blank) if no secondary address
+
+
+##############  Section 3 of 4  -  EPG CREATION FOR INTER-FIREWALL LINK ##############
+
+## ----------------------- DMZ TO INTERNAL TRANSIT LINK ------------------------
+
+create_dmz_epg_inter_fw_link: True
+
+epg_dict_dmz:
+#  tenant_name:  common
+  ap_name:      firepower-ap
+  epg_name:     dmz-int-epg
+
+  static_port_vlan:  514
+  static_ports:
+    - {sw_name: '3823', interface: ['ftd-int-fw1-IfPolGrp', 'ftd-dmz-fw1-IfPolGrp']}
+    - {sw_name: '3824', interface: ['ftd-int-fw2-IfPolGrp', 'ftd-dmz-fw2-IfPolGrp']}
+  deploy_immediacy: immediate
+  mode:                 trunk
+
+  domain_type: physical
+  phys_domain_exists: True
+  domain_name: firepower-physDom
+
+  vlan_pool_exists: True
+  vlan_pool_name: dccuplink-vlanPool
+
+  aep_exists: True
+  aep_name: firepower-AttEntPrfl
+
+  bridge_domain_name: dmz-int-fp-bd
+  vrf_name:           dmz-int-vrf
+
+  l2_unknown_unicast_flood:    flood
+  l3_unknown_multicast_flood:  flood
+  multi_destination_flood:     bd-flood
+  arp_flooding:                True
+  unicast_routing:             False
+
+## ----------------------- SIMDMZ TO INTERNAL TRANSIT LINK ------------------------
+
+create_sdmz_epg_inter_fw_link: False
+
+epg_dict_sdmz:
+#  tenant_name:  common
+  ap_name:      firepower-ap
+  epg_name:     sdmz-int-epg
+
+  static_port_vlan:  517
+  static_ports:
+    - {sw_name: '3823', interface: ['ftd-int-fw1-IfPolGrp', 'ftd-sdmz-fw1-IfPolGrp']}
+    - {sw_name: '3824', interface: ['ftd-int-fw2-IfPolGrp', 'ftd-sdmz-fw2-IfPolGrp']}
+  deploy_immediacy: immediate
+  mode:                 trunk
+
+  domain_type: physical
+  phys_domain_exists: True
+  domain_name: firepower-physDom
+
+  vlan_pool_exists: True
+  vlan_pool_name: dccuplink-vlanPool
+
+  aep_exists: True
+  aep_name: firepower-AttEntPrfl
+
+  bridge_domain_name: sdmz-int-fp-bd
+  vrf_name:           sdmz-int-vrf
+
+  l2_unknown_unicast_flood:    flood
+  l3_unknown_multicast_flood:  flood
+  multi_destination_flood:     bd-flood
+  arp_flooding:                True
+  unicast_routing:             False
+
+##############  Section 4 of 4  -  ADD STATIC ROUTES - MIGRATION ACTIVITY ##############
+
+prefix_list_dmz_l3out:
+  - 72.0.1.0/30
+  - 72.0.2.0/30
+  - 82.0.1.0/30
+  - 82.0.2.0/30
+
+prefix_list_internal_l3out:
+  - 92.0.1.0/30
+  - 92.0.2.0/30
+
+static_routes:
+  - {node_name: '3823', l3out_name: dmz-l3Out, next_hop: 99.99.99.99 , prefixes: "{{ prefix_list_dmz_l3out }}" }
+  - {node_name: '3824', l3out_name: dmz-l3Out, next_hop: 99.99.99.99,  prefixes: "{{ prefix_list_dmz_l3out }}" }
+  - {node_name: '3823', l3out_name: internal-l3Out, next_hop: 88.88.88.88 , prefixes: "{{ prefix_list_internal_l3out }}" }
+  - {node_name: '3824', l3out_name: internal-l3Out, next_hop: 88.88.88.88,  prefixes: "{{ prefix_list_internal_l3out }}" }

@@ -1,0 +1,454 @@
+---
+
+- name: Add a new routed domain
+  aci_domain:
+    host: '{{ aci_hostname }}'
+    username: '{{ aci_username }}'
+    password: '{{ aci_password }}'
+    validate_certs: '{{ aci_validate_certs | default(false) }}'
+    use_ssl: '{{ aci_use_ssl | default(true) }}'
+    use_proxy: '{{ aci_use_proxy | default(true) }}'
+    domain: '{{ item.routed_domain }}'
+    domain_type: l3dom
+    state: present
+  when: domain_found.current == [] and not item.routed_domain_exists
+
+- name: Add a new VLAN pool
+  aci_vlan_pool:
+    host: '{{ aci_hostname }}'
+    username: '{{ aci_username }}'
+    password: '{{ aci_password }}'
+    validate_certs: '{{ aci_validate_certs | default(false) }}'
+    use_ssl: '{{ aci_use_ssl | default(true) }}'
+    use_proxy: '{{ aci_use_proxy | default(true) }}'
+    pool: '{{ item.vlan_pool_name }}'
+    pool_allocation_mode: static
+    state: present
+  when: vlan_pool_found.totalCount == 0 and not item.vlan_pool_exists
+
+- name: Add a new AEP
+  aci_aep:
+    host: '{{ aci_hostname }}'
+    username: '{{ aci_username }}'
+    password: '{{ aci_password }}'
+    validate_certs: '{{ aci_validate_certs | default(false) }}'
+    use_ssl: '{{ aci_use_ssl | default(true) }}'
+    use_proxy: '{{ aci_use_proxy | default(true) }}'
+    aep:  '{{ item.aep }}'
+    state: present
+  when: aep_found.totalCount == 0 and not item.aep_exists
+
+- name: Bind a domain to VLAN pool
+  aci_domain_to_vlan_pool:
+    host: '{{ aci_hostname }}'
+    username: '{{ aci_username }}'
+    password: '{{ aci_password }}'
+    validate_certs: '{{ aci_validate_certs | default(false) }}'
+    use_ssl: '{{ aci_use_ssl | default(true) }}'
+    use_proxy: '{{ aci_use_proxy | default(true) }}'
+    domain: '{{ item.routed_domain }}'
+    domain_type: l3dom
+    pool: '{{ item.vlan_pool_name }}'
+    pool_allocation_mode: static
+    state: present
+  when: (domain_found.current == [] and not item.routed_domain_exists) or
+        (vlan_pool_found.totalCount == 0 and not item.vlan_pool_exists)
+
+- name: Add AEP to domain binding
+  aci_aep_to_domain: &binding_present
+    host: '{{ aci_hostname }}'
+    username: '{{ aci_username }}'
+    password: '{{ aci_password }}'
+    validate_certs: '{{ aci_validate_certs | default(false) }}'
+    use_ssl: '{{ aci_use_ssl | default(true) }}'
+    use_proxy: '{{ aci_use_proxy | default(true) }}'
+    aep: '{{ item.aep }}'
+    domain: '{{ item.routed_domain }}'
+    domain_type: l3dom
+    state: present
+  when: (domain_found.current == [] and not item.routed_domain_exists) or
+        (aep_found.totalCount == 0 and not item.aep_exists)
+
+- name: Add new vlan encap block, if needed
+  aci_rest:
+    host: '{{ aci_hostname }}'
+    username: '{{ aci_username }}'
+    password: '{{ aci_password }}'
+    validate_certs: '{{ aci_validate_certs | default(false) }}'
+    use_ssl: '{{ aci_use_ssl | default(true) }}'
+    use_proxy: '{{ aci_use_proxy | default(true) }}'
+    output_level: normal
+    method: post
+    path: /api/node/mo/uni/infra/vlanns-[{{ item.vlan_pool_name }}]-static/from-[vlan-{{ item.vlan_block_start }}]-to-[vlan-{{ item.vlan_block_end }}].json
+    content:
+      {
+        "fvnsEncapBlk": {
+          "attributes": {
+            "dn": "uni/infra/vlanns-[{{ item.vlan_pool_name }}]-static/from-[vlan-{{ item.vlan_block_start }}]-to-[vlan-{{ item.vlan_block_end }}]",
+            "allocMode": "static",
+            "from":  "vlan-{{ item.vlan_block_start }}",
+            "to":  "vlan-{{ item.vlan_block_end }}",
+            "rn": "from-[vlan-{{ item.vlan_block_start }}]-to-[vlan-{{ item.vlan_block_end }}]",
+            "status": "created"
+          },
+          "children": []
+        }
+      }
+  when:  item.new_vlan_encap_block
+  register: add_vlan_block_result
+  ignore_errors: True
+
+- name: update post-check list
+  set_fact:
+    post_check_results: "{{ post_check_results + [item.l3out_name + ' - WARNING: Failure to add vlan encap block - check for pre-existence or overlap'] }}"
+  when: add_vlan_block_result is failed
+
+- name: set facts for access-port vs port-channel
+  set_fact:
+     port_type: '{{ item.int_policy_group_type }}'   #port or port-channel
+
+- name: create ifPolGrp1 - access - from JSON template
+  template:
+    src: ./templates_json/int_policy_grp_access_port.j2
+    dest: ./temp_json_files/int_policy_group1.txt
+  vars:
+    policy_group_name: '{{ item.int_policy_group1 }}'
+  when:
+    - not item.int_policy_group1_exists
+    - port_type == 'port'
+    - if_pol_1_found.totalCount == 0
+
+- name: create ifPolGrp1 - access - REST
+  aci_rest:
+    host: '{{ aci_hostname }}'
+    username: '{{ aci_username }}'
+    password: '{{ aci_password }}'
+    validate_certs: '{{ aci_validate_certs | default(false) }}'
+    use_ssl: '{{ aci_use_ssl | default(true) }}'
+    use_proxy: '{{ aci_use_proxy | default(true) }}'
+    output_level: normal
+    method: post
+    path: /api/node/mo/uni/infra/funcprof/accportgrp-{{ item.int_policy_group1 }}.json
+    src: ./temp_json_files/int_policy_group1.txt
+  when:
+    - not item.int_policy_group1_exists
+    - port_type == 'port'
+    - if_pol_1_found.totalCount == 0
+  ignore_errors: True
+
+- name: create ifPolGrp2 - access - from JSON template
+  template:
+    src: ./templates_json/int_policy_grp_access_port.j2
+    dest: ./temp_json_files/int_policy_group2.txt
+  vars:
+    policy_group_name:  '{{ item.int_policy_group2 }}'
+  when:
+    - not item.int_policy_group2_exists
+    - port_type == 'port'
+    - if_pol_2_found.totalCount == 0
+
+- name: create ifPolGrp2 - access - REST
+  aci_rest:
+    host: '{{ aci_hostname }}'
+    username: '{{ aci_username }}'
+    password: '{{ aci_password }}'
+    validate_certs: '{{ aci_validate_certs | default(false) }}'
+    use_ssl: '{{ aci_use_ssl | default(true) }}'
+    use_proxy: '{{ aci_use_proxy | default(true) }}'
+    output_level: normal
+    method: post
+    path: /api/node/mo/uni/infra/funcprof/accportgrp-{{ item.int_policy_group2 }}.json
+    src: ./temp_json_files/int_policy_group2.txt
+  when:
+    - not item.int_policy_group2_exists
+    - port_type == 'port'
+    - if_pol_2_found.totalCount == 0
+  ignore_errors: True
+
+# create port-channel ifPolGrps
+
+- name: create ifPolGrp1 - port-channel - from JSON template
+  template:
+    src: ./templates_json/int_policy_grp_port_channel.j2
+    dest: ./temp_json_files/int_policy_group1.txt
+  vars:
+    policy_group_name:  '{{ item.int_policy_group1 }}'
+  when:
+    - not item.int_policy_group1_exists
+    - port_type == 'port-channel'
+    - if_pol_1_found.totalCount == 0
+
+- name: create ifPolGrp1 - port-channel - REST
+  aci_rest:
+    host: '{{ aci_hostname }}'
+    username: '{{ aci_username }}'
+    password: '{{ aci_password }}'
+    validate_certs: '{{ aci_validate_certs | default(false) }}'
+    use_ssl: '{{ aci_use_ssl | default(true) }}'
+    use_proxy: '{{ aci_use_proxy | default(true) }}'
+    output_level: normal
+    method: post
+    path: /api/node/mo/uni/infra/funcprof/accbundle-{{ item.int_policy_group1 }}.json
+    src: ./temp_json_files/int_policy_group1.txt
+  when:
+    - not item.int_policy_group1_exists
+    - port_type == 'port-channel'
+    - if_pol_1_found.totalCount == 0
+
+- name: create ifPolGrp2 - port-channel - from JSON template
+  template:
+    src: ./templates_json/int_policy_grp_port_channel.j2
+    dest: ./temp_json_files/int_policy_group2.txt
+  vars:
+    policy_group_name:  '{{ item.int_policy_group2 }}'
+  when:
+    - not item.int_policy_group2_exists
+    - port_type == 'port-channel'
+    - if_pol_2_found.totalCount == 0
+
+- name: create ifPolGrp2 - port-channel - REST
+  aci_rest:
+    host: '{{ aci_hostname }}'
+    username: '{{ aci_username }}'
+    password: '{{ aci_password }}'
+    validate_certs: '{{ aci_validate_certs | default(false) }}'
+    use_ssl: '{{ aci_use_ssl | default(true) }}'
+    use_proxy: '{{ aci_use_proxy | default(true) }}'
+    output_level: normal
+    method: post
+    path: /api/node/mo/uni/infra/funcprof/accbundle-{{ item.int_policy_group2 }}.json
+    src: ./temp_json_files/int_policy_group2.txt
+  when:
+    - not item.int_policy_group2_exists
+    - port_type == 'port-channel'
+    - if_pol_2_found.totalCount == 0
+
+# create interface selectors - 4 iterations for up to 4 links
+
+- name: set lower and upper for port-channels (link1)
+  set_fact:
+      port_range:  '{{ item.ports_leaf1_uplink1_to_fw1 }}'
+      lower_limit:  '{{ item.ports_leaf1_uplink1_to_fw1.split("-")[0] }}'
+      upper_limit: '{{ item.ports_leaf1_uplink1_to_fw1.split("-")[1] }}'
+      port_type_var:  accbundle
+  when: port_type == 'port-channel' and item.ports_leaf1_uplink1_to_fw1
+
+- name: set lower and upper for access-ports (link1)
+  set_fact:
+      port_range:   '{{ item.ports_leaf1_uplink1_to_fw1 }}'
+      lower_limit:  '{{ item.ports_leaf1_uplink1_to_fw1 }}'
+      upper_limit:  '{{ item.ports_leaf1_uplink1_to_fw1 }}'
+      port_type_var:  accportgrp
+  when: port_type == 'port' and item.ports_leaf1_uplink1_to_fw1
+
+- name: create interface selector - from JSON template (link1)
+  template:
+    src: ./templates_json/int_selector.j2
+    dest: ./temp_json_files/int_selector1.txt
+  vars:
+     leaf_profile:  '{{ item.leaf1_interface_profile }}'
+     if_pol_grp_name:  '{{ item.int_policy_group1 }}'
+  when:
+    - not item.interface_selectors_exist
+    - item.ports_leaf1_uplink1_to_fw1
+
+- name: create interface selector - REST (link1)
+  aci_rest:
+    host: '{{ aci_hostname }}'
+    username: '{{ aci_username }}'
+    password: '{{ aci_password }}'
+    validate_certs: '{{ aci_validate_certs | default(false) }}'
+    use_ssl: '{{ aci_use_ssl | default(true) }}'
+    use_proxy: '{{ aci_use_proxy | default(true) }}'
+    output_level: normal
+    method: post
+    path: /api/node/mo/uni/infra/accportprof-{{ item.leaf1_interface_profile }}/hports-port-{{ port_range }}-typ-range.json
+    src: ./temp_json_files/int_selector1.txt
+  when:
+    - not item.interface_selectors_exist
+    - item.ports_leaf1_uplink1_to_fw1
+  register: interface_selector1_result
+  ignore_errors: True
+
+- name: print warning already exists
+  debug:
+    msg:  "WARNING - Interface selector for Link 1 already exists"
+  when:  (interface_selector1_result is failed) and (item.ports_leaf1_uplink1_to_fw1)
+
+- name: update post-check list
+  set_fact:
+    post_check_results: "{{ post_check_results + [item.l3out_name + ' - WARNING - Interface selector for Link 1 already exists - skipping creation'] }}"
+  when: interface_selector1_result is failed
+
+
+##### link-2
+
+- name: set lower and upper for port-channels (link2)
+  set_fact:
+      port_range:  '{{ item.ports_leaf1_uplink2_to_fw2 }}'
+      lower_limit: '{{ item.ports_leaf1_uplink2_to_fw2.split("-")[0] }}'
+      upper_limit: '{{ item.ports_leaf1_uplink2_to_fw2.split("-")[1] }}'
+      port_type_var:  accbundle
+  when: port_type == 'port-channel' and item.ports_leaf1_uplink2_to_fw2
+
+- name: set lower and upper for access-ports (link2)
+  set_fact:
+      port_range:   '{{ item.ports_leaf1_uplink2_to_fw2 }}'
+      lower_limit: '{{ item.ports_leaf1_uplink2_to_fw2 }}'
+      upper_limit: '{{ item.ports_leaf1_uplink2_to_fw2 }}'
+      port_type_var:  accportgrp
+  when: port_type == 'port' and item.ports_leaf1_uplink2_to_fw2
+
+- name: create interface selector - from JSON template (link2)
+  template:
+    src: ./templates_json/int_selector.j2
+    dest: ./temp_json_files/int_selector2.txt
+  vars:
+     leaf_profile:  '{{ item.leaf1_interface_profile }}'
+     if_pol_grp_name:  '{{ item.int_policy_group2 }}'
+  when:
+    - not item.interface_selectors_exist
+    - item.ports_leaf1_uplink2_to_fw2
+
+- name: create interface selector - REST (link2)
+  aci_rest:
+    host: '{{ aci_hostname }}'
+    username: '{{ aci_username }}'
+    password: '{{ aci_password }}'
+    validate_certs: '{{ aci_validate_certs | default(false) }}'
+    use_ssl: '{{ aci_use_ssl | default(true) }}'
+    use_proxy: '{{ aci_use_proxy | default(true) }}'
+    output_level: normal
+    method: post
+    path: /api/node/mo/uni/infra/accportprof-{{ item.leaf1_interface_profile }}/hports-port-{{ port_range }}-typ-range.json
+    src: ./temp_json_files/int_selector2.txt
+  when:
+    - not item.interface_selectors_exist
+    - item.ports_leaf1_uplink2_to_fw2
+  register: interface_selector2_result
+  ignore_errors: True
+
+- name: print warning already exists
+  debug:
+    msg:  "WARNING - Interface selector for Link 2 already exists"
+  when: (interface_selector2_result is failed) and (item.ports_leaf1_uplink2_to_fw2)
+
+- name: update post-check list
+  set_fact:
+    post_check_results: "{{ post_check_results + [item.l3out_name + ' - WARNING - Interface selector for Link 2 already exists - skipping creation'] }}"
+  when: interface_selector2_result is failed
+
+
+#### link-3
+
+- name: set lower and upper for port-channels (link3)
+  set_fact:
+      port_range:  '{{ item.ports_leaf2_uplink1_to_fw1 }}'
+      lower_limit: '{{ item.ports_leaf2_uplink1_to_fw1.split("-")[0] }}'
+      upper_limit: '{{ item.ports_leaf2_uplink1_to_fw1.split("-")[1] }}'
+      port_type_var:  accbundle
+  when: port_type == 'port-channel' and item.ports_leaf2_uplink1_to_fw1
+
+- name: set lower and upper for access-ports (link3)
+  set_fact:
+      port_range:  '{{ item.ports_leaf2_uplink1_to_fw1 }}'
+      lower_limit: '{{ item.ports_leaf2_uplink1_to_fw1 }}'
+      upper_limit: '{{ item.ports_leaf2_uplink1_to_fw1 }}'
+      port_type_var:  accportgrp
+  when: port_type == 'port' and item.ports_leaf2_uplink1_to_fw1
+
+- name: create interface selector - from JSON template (link3)
+  template:
+    src: ./templates_json/int_selector.j2
+    dest: ./temp_json_files/int_selector3.txt
+  vars:
+     leaf_profile:  '{{ item.leaf2_interface_profile }}'
+     if_pol_grp_name:  '{{ item.int_policy_group1 }}'
+  when:
+    - not item.interface_selectors_exist
+    - item.ports_leaf2_uplink1_to_fw1
+
+- name: create interface selector - REST (link3)
+  aci_rest:
+    host: '{{ aci_hostname }}'
+    username: '{{ aci_username }}'
+    password: '{{ aci_password }}'
+    validate_certs: '{{ aci_validate_certs | default(false) }}'
+    use_ssl: '{{ aci_use_ssl | default(true) }}'
+    use_proxy: '{{ aci_use_proxy | default(true) }}'
+    output_level: normal
+    method: post
+    path: /api/node/mo/uni/infra/accportprof-{{ item.leaf2_interface_profile }}/hports-port-{{ port_range }}-typ-range.json
+    src: ./temp_json_files/int_selector3.txt
+  when:
+    - not item.interface_selectors_exist
+    - item.ports_leaf2_uplink1_to_fw1
+  register: interface_selector3_result
+  ignore_errors: True
+
+- name: print warning already exists
+  debug:
+    msg:  "WARNING - Interface selector for Link 3 already exists"
+  when: (interface_selector3_result is failed) and (item.ports_leaf2_uplink1_to_fw1)
+
+- name: update post-check list
+  set_fact:
+    post_check_results: "{{ post_check_results + [item.l3out_name + ' - WARNING - Interface selector for Link 3 already exists - skipping creation'] }}"
+  when: interface_selector3_result is failed
+
+#### link-4
+
+- name: set lower and upper for port-channels (link4)
+  set_fact:
+      port_range:  '{{ item.ports_leaf2_uplink2_to_fw2 }}'
+      lower_limit: '{{ item.ports_leaf2_uplink2_to_fw2.split("-")[0] }}'
+      upper_limit: '{{ item.ports_leaf2_uplink2_to_fw2.split("-")[1] }}'
+      port_type_var:  accbundle
+  when: port_type == 'port-channel' and item.ports_leaf2_uplink2_to_fw2
+
+- name: set lower and upper for access-ports (link4)
+  set_fact:
+      port_range:  '{{ item.ports_leaf2_uplink2_to_fw2 }}'
+      lower_limit: '{{ item.ports_leaf2_uplink2_to_fw2 }}'
+      upper_limit: '{{ item.ports_leaf2_uplink2_to_fw2 }}'
+      port_type_var:  accportgrp
+  when: port_type == 'port' and item.ports_leaf2_uplink2_to_fw2
+
+- name: create interface selector - from JSON template (link4)
+  template:
+    src: ./templates_json/int_selector.j2
+    dest: ./temp_json_files/int_selector4.txt
+  vars:
+     leaf_profile:  '{{ item.leaf2_interface_profile }}'
+     if_pol_grp_name:  '{{ item.int_policy_group2 }}'
+  when:
+    - not item.interface_selectors_exist
+    - item.ports_leaf2_uplink2_to_fw2
+
+- name: create interface selector - REST (link4)
+  aci_rest:
+    host: '{{ aci_hostname }}'
+    username: '{{ aci_username }}'
+    password: '{{ aci_password }}'
+    validate_certs: '{{ aci_validate_certs | default(false) }}'
+    use_ssl: '{{ aci_use_ssl | default(true) }}'
+    use_proxy: '{{ aci_use_proxy | default(true) }}'
+    output_level: normal
+    method: post
+    path: /api/node/mo/uni/infra/accportprof-{{ item.leaf2_interface_profile }}/hports-port-{{ port_range }}-typ-range.json
+    src: ./temp_json_files/int_selector4.txt
+  when:
+    - not item.interface_selectors_exist
+    - item.ports_leaf2_uplink2_to_fw2
+  register: interface_selector4_result
+  ignore_errors: True
+
+- name: print warning already exists
+  debug:
+    msg:  "WARNING - Interface selector for Link 4 already exists"
+  when: (interface_selector4_result is failed) and (item.ports_leaf2_uplink2_to_fw2)
+
+- name: update post-check list
+  set_fact:
+    post_check_results: "{{ post_check_results + [item.l3out_name + ' - WARNING - Interface selector for Link 4 already exists - skipping creation'] }}"
+  when: interface_selector4_result is failed

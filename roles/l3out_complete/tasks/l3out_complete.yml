@@ -1,0 +1,634 @@
+#
+# Author: Steve Heerensperger
+# cec:  sheerens
+#
+---
+
+- name: Process next L3Out
+  debug:
+    msg: "Processing NEXT L3Out: {{ item.l3out_name }}"
+  tags: validate_input
+
+- name: set pre_check var per L3Out
+  set_fact:
+     pre_check_passed: True
+  tags: validate_input
+
+- name: format output
+  set_fact:
+    pre_check_results: "{{ pre_check_results + [' ' ] }}"
+  tags: validate_input
+
+- name: next l3out
+  set_fact:
+    pre_check_results: "{{ pre_check_results + ['PRE-CHECK RESULTS BELOW FOR L3OUT NAME {{ item.l3out_name }}'] }}"
+  tags: validate_input
+
+- name: format output
+  set_fact:
+    pre_check_results: "{{ pre_check_results + ['=====================================================' ] }}"
+  tags: validate_input
+
+- name: Pre-Check 0 - L3Out
+  aci_l3out:
+    host: '{{ aci_hostname }}'
+    username: '{{ aci_username }}'
+    password: '{{ aci_password }}'
+    validate_certs: '{{ aci_validate_certs | default(false) }}'
+    use_ssl: '{{ aci_use_ssl | default(true) }}'
+    use_proxy: '{{ aci_use_proxy | default(true) }}'
+    tenant: '{{ aci_tenant }}'
+    name: '{{ item.l3out_name }}'
+    state: query
+  register: l3out_found
+  tags: validate_input
+
+- name: Pre-Check 0 - L3Out - Not found but should exist
+  set_fact:
+    pre_check_results: "{{ pre_check_results + ['l3out {{ item.l3out_name }} does NOT exist, please define'] }}"
+    pre_check_passed:  False
+  when:  l3out_found.current == [] and item.l3out_exists
+  tags: validate_input
+
+- name: Pre-Check 0 - L3Out - Found but should NOT exist
+  set_fact:
+    pre_check_results: "{{ pre_check_results + ['l3out {{ item.l3out_name }} already EXISTS, please provide unique name'] }}"
+    pre_check_passed:  False
+  when:  l3out_found.current != [] and not item.l3out_exists
+  tags: validate_input
+
+- name: set link type var
+  set_fact:
+    link_type: accportgrp
+  when: item.int_policy_group_type == 'port'
+  tags: validate_input
+
+- name: set link type var
+  set_fact:
+    link_type: accbundle
+  when: item.int_policy_group_type == 'port-channel'
+  tags: validate_input
+
+- name: Pre-Check 1 - ifPolGrp 1 of 2
+  aci_rest:
+    host: '{{ aci_hostname }}'
+    username: '{{ aci_username }}'
+    password: '{{ aci_password }}'
+    validate_certs: '{{ aci_validate_certs | default(false) }}'
+    use_ssl: '{{ aci_use_ssl | default(true) }}'
+    use_proxy: '{{ aci_use_proxy | default(true) }}'
+    output_level: normal
+    method: get
+    path: /api/node/mo/uni/infra/funcprof/{{ link_type }}-{{ item.int_policy_group1 }}.json
+  register: if_pol_1_found
+  tags: validate_input
+
+- name: Pre-Check 1 - ifPolGrp 1 of 2 - Not found but should exist
+  set_fact:
+    pre_check_results: "{{ pre_check_results + ['int_policy_group1 {{ item.int_policy_group1 }} does NOT exist, please define'] }}"
+    pre_check_passed:  False
+  when:  if_pol_1_found.totalCount == 0 and item.int_policy_group1_exists and
+          (item.create_access_policies or item.create_node_lif_profiles)
+  tags: validate_input
+
+- name: Pre-Check 1 - ifPolGrp 1 of 2 - Found but should NOT exist
+  set_fact:
+    pre_check_results: "{{ pre_check_results + ['int_policy_group1 {{ item.int_policy_group1 }} already EXISTS, please provide unique name'] }}"
+    pre_check_passed:  False
+  when:  if_pol_1_found.totalCount == 1 and not item.int_policy_group1_exists and
+          (item.create_access_policies or item.create_node_lif_profiles)
+  tags: validate_input
+
+- name: Pre-Check 2 - ifPolGrp 2 of 2
+  aci_rest:
+    host: '{{ aci_hostname }}'
+    username: '{{ aci_username }}'
+    password: '{{ aci_password }}'
+    validate_certs: '{{ aci_validate_certs | default(false) }}'
+    use_ssl: '{{ aci_use_ssl | default(true) }}'
+    use_proxy: '{{ aci_use_proxy | default(true) }}'
+    output_level: normal
+    method: get
+    path: /api/node/mo/uni/infra/funcprof/{{ link_type }}-{{ item.int_policy_group2 }}.json
+  register: if_pol_2_found
+  tags: validate_input
+
+- name: Pre-Check 2 - ifPolGrp 2 of 2 - Not found but should exist
+  set_fact:
+    pre_check_results: "{{ pre_check_results + ['int_policy_group2 {{ item.int_policy_group2 }} does NOT exist, please define'] }}"
+    pre_check_passed:  False
+  when:  if_pol_2_found.totalCount == 0 and item.int_policy_group2_exists and
+          (item.create_access_policies or item.create_node_lif_profiles)
+  tags: validate_input
+
+- name: Pre-Check 2 - ifPolGrp 2 of 2 - Found but should NOT exist
+  set_fact:
+    pre_check_results: "{{ pre_check_results + ['int_policy_group2 {{ item.int_policy_group2 }} already EXISTS, please provide unique name'] }}"
+    pre_check_passed:  False
+  when:  if_pol_2_found.totalCount == 1 and not item.int_policy_group2_exists and
+          (item.create_access_policies or item.create_node_lif_profiles)
+  tags: validate_input
+
+- name: Pre-Check 3 - Vlan Pool
+  aci_rest:
+    host: '{{ aci_hostname }}'
+    username: '{{ aci_username }}'
+    password: '{{ aci_password }}'
+    validate_certs: '{{ aci_validate_certs | default(false) }}'
+    use_ssl: '{{ aci_use_ssl | default(true) }}'
+    use_proxy: '{{ aci_use_proxy | default(true) }}'
+    output_level: normal
+    method: get
+    path: api/node/mo/uni/infra/vlanns-[{{ item.vlan_pool_name }}]-static.json
+  register: vlan_pool_found
+  tags: validate_input
+
+- name: Pre-Check 3 - Vlan Pool - Not found but should exist
+  set_fact:
+    pre_check_results: "{{ pre_check_results + ['vlan_pool_name {{ item.vlan_pool_name }} does NOT exist, please define'] }}"
+    pre_check_passed:  False
+  when:  vlan_pool_found.totalCount == 0 and item.vlan_pool_exists and
+          (item.create_access_policies or item.create_node_lif_profiles)
+  tags: validate_input
+
+- name: Pre-Check 3 - Vlan Pool - Found but should NOT exist
+  set_fact:
+    pre_check_results: "{{ pre_check_results + ['vlan_pool_name {{ item.vlan_pool_name }} already EXISTS, please provide unique name'] }}"
+    pre_check_passed:  False
+  when:  vlan_pool_found.totalCount == 1 and not item.vlan_pool_exists and
+          (item.create_access_policies or item.create_node_lif_profiles)
+  tags: validate_input
+
+- name: Pre-Check 4 - Tenant
+  aci_tenant:
+    host: '{{ aci_hostname }}'
+    username: '{{ aci_username }}'
+    password: '{{ aci_password }}'
+    validate_certs: '{{ aci_validate_certs | default(false) }}'
+    use_ssl: '{{ aci_use_ssl | default(true) }}'
+    use_proxy: '{{ aci_use_proxy | default(true) }}'
+    output_level: normal
+    state: query
+    tenant: '{{ aci_tenant }}'
+  register: tenant_found
+  tags: validate_input
+
+- name: Pre-Check 4 - Tenant - Not found but should exist
+  set_fact:
+    pre_check_results: "{{ pre_check_results + ['tenant_name {{ aci_tenant }} does NOT exist, please define'] }}"
+    pre_check_passed:  False
+  when:  tenant_found.current == []
+  tags: validate_input
+
+- name: Pre-Check 5 - VRF
+  aci_rest:
+    host: '{{ aci_hostname }}'
+    username: '{{ aci_username }}'
+    password: '{{ aci_password }}'
+    validate_certs: '{{ aci_validate_certs | default(false) }}'
+    use_ssl: '{{ aci_use_ssl | default(true) }}'
+    use_proxy: '{{ aci_use_proxy | default(true) }}'
+    output_level: normal
+    method: get
+    path: /api/node/mo/uni/tn-{{ aci_tenant }}/ctx-{{ item.vrf_name }}.json
+  register: vrf_found
+  tags: validate_input
+
+- name: Pre-Check 5 - VRF - Not found but should exist
+  set_fact:
+    pre_check_results: "{{ pre_check_results + ['l3out VRF {{ item.vrf_name }} does NOT exist, please define'] }}"
+    pre_check_passed:  False
+  when:  vrf_found.totalCount == 0 and item.l3out_vrf_exists
+  tags: validate_input
+
+- name: Pre-Check 5 - VRF - Found but should NOT exist
+  set_fact:
+    pre_check_results: "{{ pre_check_results + ['l3out VRF {{ item.vrf_name }} already EXISTS, please provide unique name'] }}"
+    pre_check_passed:  False
+  when:  vrf_found.totalCount == 1 and not item.l3out_vrf_exists
+  tags: validate_input
+
+- name: Pre-Check 6 - Routed Domain
+  aci_domain:
+    host: '{{ aci_hostname }}'
+    username: '{{ aci_username }}'
+    password: '{{ aci_password }}'
+    validate_certs: '{{ aci_validate_certs | default(false) }}'
+    use_ssl: '{{ aci_use_ssl | default(true) }}'
+    use_proxy: '{{ aci_use_proxy | default(true) }}'
+    domain: '{{ item.routed_domain }}'
+    domain_type: l3dom
+    state: query
+  register: domain_found
+  tags: validate_input
+
+- name: Pre-Check 6 - Routed Domain - Not found but should exist
+  set_fact:
+    pre_check_results: "{{ pre_check_results + ['routed_domain {{ item.routed_domain }} does NOT exist, please define'] }}"
+    pre_check_passed:  False
+  when:  domain_found.current == [] and item.routed_domain_exists and
+         item.create_access_policies
+  tags: validate_input
+
+- name: Pre-Check 6 - Routed Domain - Found but should NOT exist
+  set_fact:
+    pre_check_results: "{{ pre_check_results + ['routed_domain {{ item.routed_domain }} already EXISTS, please provide unique name'] }}"
+    pre_check_passed:  False
+  when:  domain_found.current != [] and not item.routed_domain_exists and
+         item.create_access_policies
+  tags: validate_input
+
+- name: Pre-Check 7 - AEP
+  aci_rest:
+    host: '{{ aci_hostname }}'
+    username: '{{ aci_username }}'
+    password: '{{ aci_password }}'
+    validate_certs: '{{ aci_validate_certs | default(false) }}'
+    use_ssl: '{{ aci_use_ssl | default(true) }}'
+    use_proxy: '{{ aci_use_proxy | default(true) }}'
+    output_level: normal
+    method: get
+    path: /api/node/mo/uni/infra/attentp-{{ item.aep }}.json
+  register: aep_found
+  tags: validate_input
+
+- name: Pre-Check 7 - AEP - Not found but should exist
+  set_fact:
+    pre_check_results: "{{ pre_check_results + ['AEP {{ item.aep }} does NOT exist, please define'] }}"
+    pre_check_passed:  False
+  when:  aep_found.totalCount == 0 and item.aep_exists and
+         item.create_access_policies
+  tags: validate_input
+
+- name: Pre-Check 7 - AEP - Found but should NOT exist
+  set_fact:
+    pre_check_results: "{{ pre_check_results + ['AEP {{ item.aep }} already EXISTS, please provide unique name'] }}"
+    pre_check_passed:  False
+  when:  aep_found.totalCount == 1 and not item.aep_exists and
+         item.create_access_policies
+  tags: validate_input
+
+- name: Pre-Check 8 - Leaf Interface Profile 1 of 2
+  aci_rest:
+    host: '{{ aci_hostname }}'
+    username: '{{ aci_username }}'
+    password: '{{ aci_password }}'
+    validate_certs: '{{ aci_validate_certs | default(false) }}'
+    use_ssl: '{{ aci_use_ssl | default(true) }}'
+    use_proxy: '{{ aci_use_proxy | default(true) }}'
+    output_level: normal
+    method: get
+    path: /api/node/mo/uni/infra/accportprof-{{ item.leaf1_interface_profile }}.json
+  register: lif1_found
+  tags: validate_input
+
+- name: Pre-Check 8 - Leaf Interface Profile 1 of 2
+  set_fact:
+    pre_check_results: "{{ pre_check_results + ['LIF {{ item.leaf1_interface_profile }} does NOT exist, please define'] }}"
+    pre_check_passed:  False
+  when:  lif1_found.totalCount == 0 and item.create_access_policies
+  tags: validate_input
+
+- name: Pre-Check 9 - Leaf Interface Profile 2 of 2
+  aci_rest:
+    host: '{{ aci_hostname }}'
+    username: '{{ aci_username }}'
+    password: '{{ aci_password }}'
+    validate_certs: '{{ aci_validate_certs | default(false) }}'
+    use_ssl: '{{ aci_use_ssl | default(true) }}'
+    use_proxy: '{{ aci_use_proxy | default(true) }}'
+    output_level: normal
+    method: get
+    path: /api/node/mo/uni/infra/accportprof-{{ item.leaf2_interface_profile }}.json
+  register: lif2_found
+  tags: validate_input
+
+- name: Pre-Check 9 - Leaf Interface Profile 2 of 2
+  set_fact:
+    pre_check_results: "{{ pre_check_results + ['LIF {{ item.leaf2_interface_profile }} does NOT exist, please define'] }}"
+    pre_check_passed:  False
+  when:  lif2_found.totalCount == 0 and item.create_access_policies
+  tags: validate_input
+
+- name: Pre-Check 10 - lldp policy
+  aci_rest:
+    host: '{{ aci_hostname }}'
+    username: '{{ aci_username }}'
+    password: '{{ aci_password }}'
+    validate_certs: '{{ aci_validate_certs | default(false) }}'
+    use_ssl: '{{ aci_use_ssl | default(true) }}'
+    use_proxy: '{{ aci_use_proxy | default(true) }}'
+    output_level: normal
+    method: get
+    path: /api/node/mo/uni/infra/lldpIfP-{{ item.lldp_policy }}.json
+  register: lldp_found
+  tags: validate_input
+
+- name: Pre-Check 10 - Leaf Interface Profile 1 of 2
+  set_fact:
+    pre_check_results: "{{ pre_check_results + ['Interface Policy {{ item.lldp_policy }} does NOT exist, please define'] }}"
+    pre_check_passed:  False
+  when:  lldp_found.totalCount == 0 and item.create_access_policies
+  tags: validate_input
+
+- name: Pre-Check 11 - cdp policy
+  aci_rest:
+    host: '{{ aci_hostname }}'
+    username: '{{ aci_username }}'
+    password: '{{ aci_password }}'
+    validate_certs: '{{ aci_validate_certs | default(false) }}'
+    use_ssl: '{{ aci_use_ssl | default(true) }}'
+    use_proxy: '{{ aci_use_proxy | default(true) }}'
+    output_level: normal
+    method: get
+    path: /api/node/mo/uni/infra/cdpIfP-{{ item.cdp_policy }}.json
+  register: cdp_found
+  tags: validate_input
+
+- name: Pre-Check 11 - cdp policy
+  set_fact:
+    pre_check_results: "{{ pre_check_results + ['Interface Policy {{ item.cdp_policy }} does NOT exist, please define'] }}"
+    pre_check_passed:  False
+  when:  cdp_found.totalCount == 0 and item.create_access_policies
+  tags: validate_input
+
+- name: Pre-Check 12 - link level policy
+  aci_rest:
+    host: '{{ aci_hostname }}'
+    username: '{{ aci_username }}'
+    password: '{{ aci_password }}'
+    validate_certs: '{{ aci_validate_certs | default(false) }}'
+    use_ssl: '{{ aci_use_ssl | default(true) }}'
+    use_proxy: '{{ aci_use_proxy | default(true) }}'
+    output_level: normal
+    method: get
+    path: /api/node/mo/uni/infra/hintfpol-{{ item.link_level_policy }}.json
+  register: link_level_found
+  tags: validate_input
+
+- name: Pre-Check 12 - link level policy
+  set_fact:
+    pre_check_results: "{{ pre_check_results + ['Interface Policy {{ item.link_level_policy }} does NOT exist, please define'] }}"
+    pre_check_passed:  False
+  when:  link_level_found.totalCount == 0 and item.create_access_policies
+  tags: validate_input
+
+- name: Pre-Check 13 - stp/bpduguard policy
+  aci_rest:
+    host: '{{ aci_hostname }}'
+    username: '{{ aci_username }}'
+    password: '{{ aci_password }}'
+    validate_certs: '{{ aci_validate_certs | default(false) }}'
+    use_ssl: '{{ aci_use_ssl | default(true) }}'
+    use_proxy: '{{ aci_use_proxy | default(true) }}'
+    output_level: normal
+    method: get
+    path: /api/node/mo/uni/infra/ifPol-{{ item.stp_int_policy }}.json
+  register: bpduguard_found
+  tags: validate_input
+
+- name: Pre-Check 13 - stp/bpduguard policy
+  set_fact:
+    pre_check_results: "{{ pre_check_results + ['Interface Policy {{ item.stp_int_policy }} does NOT exist, please define'] }}"
+    pre_check_passed:  False
+  when:  bpduguard_found.totalCount == 0 and item.create_access_policies
+  tags: validate_input
+
+- name: Pre-Check 14 - port-channel policy
+  aci_rest:
+    host: '{{ aci_hostname }}'
+    username: '{{ aci_username }}'
+    password: '{{ aci_password }}'
+    validate_certs: '{{ aci_validate_certs | default(false) }}'
+    use_ssl: '{{ aci_use_ssl | default(true) }}'
+    use_proxy: '{{ aci_use_proxy | default(true) }}'
+    output_level: normal
+    method: get
+    path: /api/node/mo/uni/infra/lacplagp-{{ item.port_chann_policy }}.json
+  register: port_channel_found
+  tags: validate_input
+
+- name: Pre-Check 14 - port-channel policy
+  set_fact:
+    pre_check_results: "{{ pre_check_results + ['Interface Policy {{ item.port_chann_policy }} does NOT exist, please define'] }}"
+    pre_check_passed:  False
+  when:  port_channel_found.totalCount == 0 and item.create_access_policies and item.int_policy_group_type == 'port-channel'
+  tags: validate_input
+
+
+- name: OVERALL Pre-Check Results Action - fail action
+  debug:
+    msg:
+     - '{{ item.l3out_name }} - ONE OR MORE INPUT ERRORS WERE FOUND - PLEASE CORRECT INPUT'
+     - 'ERROR WHILE Proessing L3Out name {{ item.l3out_name }}'
+  when: not pre_check_passed
+  tags: validate_input
+
+- name: OVERALL Pre-Check Results fail - append pre_check_results
+  set_fact:
+    pre_check_results: "{{ pre_check_results + [ item.l3out_name + ' - ONE OR MORE INPUT ERRORS WERE FOUND - PLEASE CORRECT INPUT'] }}"
+  when:  not pre_check_passed
+  tags: validate_input
+
+- name: OVERALL Pre-Check Results Action - pass
+  debug:
+    msg:
+     - 'User Input Validation PASSED for l3out - {{ item.l3out_name }}'
+  when: pre_check_passed
+  tags: validate_input
+
+- name: OVERALL Pre-Check Results pass - append pre_check_results
+  set_fact:
+    pre_check_results: "{{ pre_check_results + ['User Input Validation PASSED for l3out  ' + item.l3out_name ] }}"
+  when:  pre_check_passed
+  tags: validate_input
+
+- name: temp print item.l3out_name
+  debug:
+    var: item.l3out_name
+  tags: validate_input
+
+ #include FABRIC_ACCESS_POLICIES set of tasks if variable is set
+
+- name: include access policies role
+  include_role:
+        name: fabric_access_policies
+        tasks_from: fabric_access_policies.yml
+  when: item.create_access_policies
+
+- name: Create VRF if doesn't already exist
+  aci_vrf:
+    host: '{{ aci_hostname }}'
+    username: '{{ aci_username }}'
+    password: '{{ aci_password }}'
+    validate_certs: '{{ aci_validate_certs | default(false) }}'
+    use_ssl: '{{ aci_use_ssl | default(true) }}'
+    use_proxy: '{{ aci_use_proxy | default(true) }}'
+    vrf: '{{ item.vrf_name }}'
+    tenant: '{{ aci_tenant }}'
+    policy_control_direction: egress
+    state: present
+  when: vrf_found.totalCount == 0 and not item.l3out_vrf_exists
+
+- name: Add a new L3Out
+  aci_l3out:
+    host: '{{ aci_hostname }}'
+    username: '{{ aci_username }}'
+    password: '{{ aci_password }}'
+    validate_certs: '{{ aci_validate_certs | default(false) }}'
+    use_ssl: '{{ aci_use_ssl | default(true) }}'
+    use_proxy: '{{ aci_use_proxy | default(true) }}'
+    tenant: '{{ aci_tenant }}'
+    name: '{{ item.l3out_name }}'
+    domain: '{{ item.routed_domain }}'
+    vrf: '{{ item.vrf_name }}'
+    l3protocol: ""
+    route_control: "export"
+    state: present
+  when: l3out_found.current == [] and not item.l3out_exists
+
+- name: Add EIGRP routing to L3Out (not currently supported in module)
+  aci_rest:
+    host: '{{ aci_hostname }}'
+    username: '{{ aci_username }}'
+    password: '{{ aci_password }}'
+    validate_certs: '{{ aci_validate_certs | default(false) }}'
+    use_ssl: '{{ aci_use_ssl | default(true) }}'
+    use_proxy: '{{ aci_use_proxy | default(true) }}'
+    output_level: normal
+    method: post
+    path: /api/node/mo/uni/tn-{{ aci_tenant }}/out-{{ item.l3out_name }}.json
+    content:
+      {
+        "l3extOut": {
+          "attributes": {
+            "dn": "uni/tn-{{ aci_tenant }}/out-{{ item.l3out_name }}",
+            "status": "modified"
+          },
+          "children": [
+            {
+              "eigrpExtP": {
+                "attributes": {
+                  "dn": "uni/tn-{{ aci_tenant }}/out-{{ item.l3out_name }}/eigrpExtP",
+                  "asn": "{{ item.l3out_eigrp_asn }}",
+                  "status": "created"
+                },
+                "children": []
+              }
+            },
+            {
+              "pimExtP": {
+                "attributes": {
+                  "dn": "uni/tn-{{ aci_tenant }}/out-{{ item.l3out_name }}/pimextp",
+                  "status": "deleted"
+                },
+                "children": []
+              }
+            }
+          ]
+        }
+      }
+  when:  item.l3out_routing_protocol == 'eigrp' and item.create_node_lif_profiles and
+          not item.l3out_exists and l3out_found.current == []
+
+- name: Add BGP routing to L3Out
+  aci_rest:
+    host: '{{ aci_hostname }}'
+    username: '{{ aci_username }}'
+    password: '{{ aci_password }}'
+    validate_certs: '{{ aci_validate_certs | default(false) }}'
+    use_ssl: '{{ aci_use_ssl | default(true) }}'
+    use_proxy: '{{ aci_use_proxy | default(true) }}'
+    output_level: normal
+    method: post
+    path: /api/node/mo/uni/tn-{{ aci_tenant }}/out-{{ item.l3out_name }}.json
+    content:
+      {
+        "l3extOut": {
+          "attributes": {
+            "dn": "uni/tn-{{ aci_tenant }}/out-{{ item.l3out_name }}",
+            "status": "modified"
+          },
+          "children": [
+            {
+              "bgpExtP": {
+                "attributes": {
+                  "dn": "uni/tn-{{ aci_tenant }}/out-{{ item.l3out_name }}/bgpExtP",
+                  "status": "created"
+                },
+                "children": []
+              }
+            },
+            {
+              "pimExtP": {
+                "attributes": {
+                  "dn": "uni/tn-{{ aci_tenant }}/out-{{ item.l3out_name }}/pimextp",
+                  "status": "deleted"
+                },
+                "children": []
+              }
+            }
+          ]
+        }
+      }
+  when:  (item.l3out_routing_protocol == 'bgp' or item.l3out_routing_protocol == 'bgp_default') and
+             item.create_node_lif_profiles and not item.l3out_exists and l3out_found.current == []
+
+- name: Add extNets to L3Out
+  aci_rest:
+    host: '{{ aci_hostname }}'
+    username: '{{ aci_username }}'
+    password: '{{ aci_password }}'
+    validate_certs: '{{ aci_validate_certs | default(false) }}'
+    use_ssl: '{{ aci_use_ssl | default(true) }}'
+    use_proxy: '{{ aci_use_proxy | default(true) }}'
+    output_level: normal
+    method: post
+    path: /api/node/mo/uni/tn-{{ aci_tenant }}/out-{{ item.l3out_name }}/instP-{{ inner_item.0.name }}.json
+    content:
+      {
+        "l3extInstP": {
+          "attributes": {
+            "dn": "uni/tn-{{ aci_tenant }}/out-{{ item.l3out_name }}/instP-{{ inner_item.0.name }}",
+            "name": "{{ inner_item.0.name }}",
+            "rn": "instP-{{ inner_item.0.name }}",
+          },
+          "children": [
+            {
+              "l3extSubnet": {
+                "attributes": {
+                  "dn": "uni/tn-{{ aci_tenant }}/out-{{ item.l3out_name }}/instP-{{ inner_item.0.name }}/extsubnet-[{{ inner_item.1 }}]",
+                  "ip": "{{ inner_item.1 }}",
+                  "aggregate": "",
+                  "rn": "extsubnet-[{{ inner_item.1 }}]",
+                },
+                "children": []
+              }
+            }
+          ]
+        }
+      }
+  with_subelements:
+     - "{{ item.l3out_ext_nets }}"
+     - subnets
+  loop_control:
+     loop_var: inner_item
+
+# create Node Profiles and Leaf Interface Profiles set of tasks, if variable is set
+
+- name: include node_and_lif_profiles role task
+  include_role:
+        name: l3out_complete
+        tasks_from: node_and_lif_profiles.yml
+  when: item.create_node_lif_profiles
+
+# create VRF Level contract - simple permit all using common/default, if variable is set
+
+- name: include node_and_lif_profiles role task
+  include_role:
+        name: contracts
+        tasks_from: vrf_permit_all_contract.yml
+  when: item.create_apply_vrf_contract
+
+
+

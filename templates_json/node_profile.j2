@@ -1,0 +1,62 @@
+      {
+        "l3extLNodeP": {
+          "attributes": {
+            "dn": "uni/tn-{{ aci_tenant }}/out-{{ item.l3out_name }}/lnodep-sw{{ current_leaf_node_id }}-NodePrfl",
+            "name": "sw{{ current_leaf_node_id }}-NodePrfl",
+            "rn": "lnodep-sw{{ current_leaf_node_id }}-NodePrfl",
+            "status": "created"
+          },
+          "children": [
+            {
+              "l3extRsNodeL3OutAtt": {
+                "attributes": {
+                  "dn": "uni/tn-{{ aci_tenant }}/out-{{ item.l3out_name }}/lnodep-sw{{ current_leaf_node_id }}-NodePrfl/rsnodeL3OutAtt-[topology/pod-1/node-{{current_leaf_node_id}}]",
+                  "tDn": "topology/pod-1/node-{{ current_leaf_node_id }}",
+                  "rtrId": "{{ current_leaf_router_id}}",
+                  "rn": "rsnodeL3OutAtt-[topology/pod-1/node-{{ current_leaf_node_id }}]",
+                  "status": "created"
+                },
+                "children": [
+             {
+              "ipRouteP": {
+                "attributes": {
+                  "dn": "uni/tn-{{ aci_tenant }}/out-{{ item.l3out_name }}/lnodep-sw{{ current_leaf_node_id }}-NodePrfl/rsnodeL3OutAtt-[topology/pod-1/node-{{ current_leaf_node_id }}]/rt-[0.0.0.0/0]",
+                  "ip": "0.0.0.0/0",
+                  "pref": "250",
+                  "rn": "rt-[0.0.0.0/0]",
+                  "status": "{{ eigrp_status1 }}"
+                },
+                "children": [
+                  {
+                    "ipNexthopP": {
+                      "attributes": {
+                        "dn": "uni/tn-{{ aci_tenant }}/out-{{ item.l3out_name }}/lnodep-sw{{ current_leaf_node_id }}-NodePrfl/rsnodeL3OutAtt-[topology/pod-1/node-{{ current_leaf_node_id }}]/rt-[0.0.0.0/0]/nh-[{{ current_leaf_uplink_1_peer }}]",
+                        "nhAddr": "{{ current_leaf_uplink_1_peer }}",
+                        "pref": "250",
+                        "rn": "nh-[{{ current_leaf_uplink_1_peer }}]",
+                        "status": "{{ eigrp_status1 }}"
+                      },
+                      "children": []
+                    }
+                  },
+                  {
+                    "ipNexthopP": {
+                      "attributes": {
+                        "dn": "uni/tn-{{ aci_tenant }}/out-{{ item.l3out_name }}/lnodep-sw{{ current_leaf_node_id }}-NodePrfl/rsnodeL3OutAtt-[topology/pod-1/node-{{ current_leaf_node_id }}]/rt-[0.0.0.0/0]/nh-[{{ current_leaf_uplink_2_peer }}]",
+                        "nhAddr": "{{ current_leaf_uplink_2_peer }}",
+                        "pref": "250",
+                        "rn": "nh-[{{ current_leaf_uplink_2_peer }}]",
+                        "status": "{{ eigrp_status1 }}"
+                      },
+                      "children": []
+                    }
+                  }
+                ]
+              }
+            }
+          ]
+        }
+      }
+    ]
+  }
+}

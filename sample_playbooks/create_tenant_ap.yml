@@ -1,0 +1,38 @@
+---
+- hosts: localhost
+  gather_facts: no
+
+  vars:
+    aci_hostname: 'svl-acisim-1.cisco.com'
+
+  vars_prompt:
+    - name: "aci_username"
+      prompt: "Logging into {{ aci_hostname }} - Enter USERNAME"
+      private: no
+    - name: "aci_password"
+      prompt: "Logging into {{ aci_hostname }} - Enter PASSWORD"
+      private: yes
+
+  tasks:
+    - name: Add a new tenant
+      aci_tenant:
+        host:     '{{ aci_hostname }}'
+        username: '{{ aci_username }}'
+        password: '{{ aci_password }}'
+        validate_certs: False
+        tenant: stage-tenant
+        description: tenant for Steve
+        state: present
+      delegate_to: localhost
+
+    - name: Add a new AP
+      aci_ap:
+        host:     '{{ aci_hostname }}'
+        username: '{{ aci_username }}'
+        password: '{{ aci_password }}'
+        validate_certs: False
+        tenant: stage-tenant
+        ap: stage-ap
+        description: Steve-ap
+        state: present
+      delegate_to: localhost

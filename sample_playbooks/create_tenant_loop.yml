@@ -1,0 +1,38 @@
+---
+- hosts: localhost
+  gather_facts: no
+
+  vars:
+    aci_hostname: 'svl-acisim-1.cisco.com'
+
+  vars_prompt:
+    - name: "aci_username"
+      prompt: "Logging into {{ aci_hostname }} - Enter USERNAME"
+      private: no
+    - name: "aci_password"
+      prompt: "Logging into {{ aci_hostname }} - Enter PASSWORD"
+      private: yes
+
+  tasks:
+
+    - name: Add a new tenant
+      aci_tenant:
+        host:     '{{ aci_hostname }}'
+        username: '{{ aci_username }}'
+        password: '{{ aci_password }}'
+        validate_certs: False
+        tenant: '{{ item }}'
+        description: one of many tenants
+        state: present
+      delegate_to: localhost
+      loop:
+        - tenant-100
+        - tenant-200
+        - tenant-300
+        - tenant-400
+        - tenant-500
+        - tenant-600
+        - tenant-700
+        - tenant-800
+        - tenant-900
+

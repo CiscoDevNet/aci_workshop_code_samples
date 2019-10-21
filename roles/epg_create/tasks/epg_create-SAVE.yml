@@ -1,0 +1,230 @@
+
+# this was developed specifically for DMZDC FW setup - needs work to make more general purpose
+
+- name: TEST VAR PASSING VIA INCLUDE_ROLE
+  debug:
+    msg:
+     - 'PASSED THIS TO EPG_CREATE.YML:  - {{ test_var }}'
+
+- name: Check if VRF exists
+  aci_rest:
+    host: '{{ aci_hostname }}'
+    username: '{{ aci_username }}'
+    password: '{{ aci_password }}'
+    validate_certs: '{{ aci_validate_certs | default(false) }}'
+    use_ssl: '{{ aci_use_ssl | default(true) }}'
+    use_proxy: '{{ aci_use_proxy | default(true) }}'
+    output_level: normal
+    method: get
+    path: /api/node/mo/uni/tn-{{ tenant_name }}/ctx-{{ vrf_name }}.json
+  register: vrf_found
+
+- name: Create VRF if doesn't already exist
+  aci_vrf:
+    host: '{{ aci_hostname }}'
+    username: '{{ aci_username }}'
+    password: '{{ aci_password }}'
+    validate_certs: '{{ aci_validate_certs | default(false) }}'
+    use_ssl: '{{ aci_use_ssl | default(true) }}'
+    use_proxy: '{{ aci_use_proxy | default(true) }}'
+    vrf: '{{ vrf_name }}'
+    tenant: '{{ tenant_name }}'
+    state: present
+  when: vrf_found.totalCount == 0
+
+- name: Check if BD exists
+  aci_rest:
+    host: '{{ aci_hostname }}'
+    username: '{{ aci_username }}'
+    password: '{{ aci_password }}'
+    validate_certs: '{{ aci_validate_certs | default(false) }}'
+    use_ssl: '{{ aci_use_ssl | default(true) }}'
+    use_proxy: '{{ aci_use_proxy | default(true) }}'
+    output_level: normal
+    method: get
+    path: /api/node/mo/uni/tn-{{ tenant_name }}/BD-{{ bridge_domain_name }}.json
+  register: bd_found
+
+- name: add new BD
+  aci_bd:
+    host: '{{ aci_hostname }}'
+    username: '{{ aci_username }}'
+    password: '{{ aci_password }}'
+    validate_certs: '{{ aci_validate_certs | default(false) }}'
+    use_ssl: '{{ aci_use_ssl | default(true) }}'
+    use_proxy: '{{ aci_use_proxy | default(true) }}'
+    tenant: '{{ tenant_name }}'
+    bd: '{{ bridge_domain_name }}'
+    vrf: '{{ vrf_name }}'
+    l2_unknown_unicast: '{{ l2_unknown_unicast_flood }}'
+    l3_unknown_multicast: '{{ l3_unknown_multicast_flood }}'
+    multi_dest: '{{ multi_destination_flood }}'
+    arp_flooding: '{{ arp_flooding }}'
+    enable_routing: '{{ unicast_routing }}'
+    state: present
+  when: bd_found.totalCount == 0
+
+- name: Check if AP exists
+  aci_rest:
+    host: '{{ aci_hostname }}'
+    username: '{{ aci_username }}'
+    password: '{{ aci_password }}'
+    validate_certs: '{{ aci_validate_certs | default(false) }}'
+    use_ssl: '{{ aci_use_ssl | default(true) }}'
+    use_proxy: '{{ aci_use_proxy | default(true) }}'
+    output_level: normal
+    method: get
+    path: /api/node/mo/uni/tn-{{ tenant_name }}/ap-{{ ap_name }}.json
+  register: ap_found
+
+- name: create AP
+  aci_rest:
+    host: '{{ aci_hostname }}'
+    username: '{{ aci_username }}'
+    password: '{{ aci_password }}'
+    validate_certs: '{{ aci_validate_certs | default(false) }}'
+    use_ssl: '{{ aci_use_ssl | default(true) }}'
+    use_proxy: '{{ aci_use_proxy | default(true) }}'
+    output_level: normal
+    method: post
+    path: /api/node/mo/uni/tn-{{ tenant_name }}/ap-{{ ap_name }}.json
+    content:
+      {
+        "fvAp": {
+          "attributes": {
+            "dn": "uni/tn-{{ tenant_name }}/ap-{{ ap_name }}",
+            "name": "{{ ap_name }}",
+            "rn": "ap-{{ ap_name }}",
+            "status": "created"
+          },
+          "children": []
+        }
+      }
+  when: ap_found.totalCount == 0
+
+- name: check if EPG exists
+  aci_rest:
+    host: '{{ aci_hostname }}'
+    username: '{{ aci_username }}'
+    password: '{{ aci_password }}'
+    validate_certs: '{{ aci_validate_certs | default(false) }}'
+    use_ssl: '{{ aci_use_ssl | default(true) }}'
+    use_proxy: '{{ aci_use_proxy | default(true) }}'
+    output_level: normal
+    method: get
+    path: /api/node/mo/uni/tn-{{ tenant_name }}/ap-{{ ap_name }}/epg-{{ epg_name }}.json
+  register: epg_found
+
+- name: Add a new EPG
+  aci_epg:
+    host: '{{ aci_hostname }}'
+    username: '{{ aci_username }}'
+    password: '{{ aci_password }}'
+    validate_certs: '{{ aci_validate_certs | default(false) }}'
+    use_ssl: '{{ aci_use_ssl | default(true) }}'
+    use_proxy: '{{ aci_use_proxy | default(true) }}'
+    tenant: '{{ tenant_name }}'
+    bd: '{{ bridge_domain_name }}'
+    ap: '{{ ap_name }}'
+    epg: '{{ epg_name }}'
+    state: present
+  when: epg_found.totalCount == 0
+
+- name: check if Domain exists
+  aci_rest:
+    host: '{{ aci_hostname }}'
+    username: '{{ aci_username }}'
+    password: '{{ aci_password }}'
+    validate_certs: '{{ aci_validate_certs | default(false) }}'
+    use_ssl: '{{ aci_use_ssl | default(true) }}'
+    use_proxy: '{{ aci_use_proxy | default(true) }}'
+    output_level: normal
+    method: get
+    path: /api/node/mo/uni/phys-{{ domain_name }}.json
+  register: domain_found
+
+- name: Add a new physical domain
+  aci_domain:
+    host: '{{ aci_hostname }}'
+    username: '{{ aci_username }}'
+    password: '{{ aci_password }}'
+    validate_certs: '{{ aci_validate_certs | default(false) }}'
+    use_ssl: '{{ aci_use_ssl | default(true) }}'
+    use_proxy: '{{ aci_use_proxy | default(true) }}'
+    domain: '{{ domain_name }}'
+    domain_type: phys
+    state: present
+  when: domain_found.totalCount == 0
+
+- name: Bind a domain to VLAN pool
+  aci_domain_to_vlan_pool:
+    host: '{{ aci_hostname }}'
+    username: '{{ aci_username }}'
+    password: '{{ aci_password }}'
+    validate_certs: '{{ aci_validate_certs | default(false) }}'
+    use_ssl: '{{ aci_use_ssl | default(true) }}'
+    use_proxy: '{{ aci_use_proxy | default(true) }}'
+    domain: '{{ domain_name }}'
+    domain_type: phys
+    pool: '{{ vlan_pool_name }}'
+    pool_allocation_mode: static
+    state: present
+  when: (domain_found.totalCount == 0 and not phys_domain_exists) or
+        (vlan_pool_found.totalCount == 0 and not vlan_pool_exists)
+
+- name: Add AEP to domain binding
+  aci_aep_to_domain: &binding_present
+    host: '{{ aci_hostname }}'
+    username: '{{ aci_username }}'
+    password: '{{ aci_password }}'
+    validate_certs: '{{ aci_validate_certs | default(false) }}'
+    use_ssl: '{{ aci_use_ssl | default(true) }}'
+    use_proxy: '{{ aci_use_proxy | default(true) }}'
+    aep: '{{ aep_name }}'
+    domain: '{{ domain_name }}'
+    domain_type: phys
+    state: present
+  when: (domain_found.totalCount == 0 and not phys_domain_exists) or
+        (aep_found.totalCount == 0 and not aep_exists)
+
+- name: Add a new physical domain to EPG binding
+  aci_epg_to_domain:
+    host: '{{ aci_hostname }}'
+    username: '{{ aci_username }}'
+    password: '{{ aci_password }}'
+    validate_certs: '{{ aci_validate_certs | default(false) }}'
+    use_ssl: '{{ aci_use_ssl | default(true) }}'
+    use_proxy: '{{ aci_use_proxy | default(true) }}'
+    tenant: '{{ tenant_name }}'
+    ap: '{{ ap_name }}'
+    epg: '{{ epg_name }}'
+    domain: '{{ domain_name }}'
+    domain_type: phys
+    state: present
+
+- name: Deploy Static Path binding for given EPG
+  aci_static_binding_to_epg:
+    host: '{{ aci_hostname }}'
+    username: '{{ aci_username }}'
+    password: '{{ aci_password }}'
+    validate_certs: '{{ aci_validate_certs | default(false) }}'
+    use_ssl: '{{ aci_use_ssl | default(true) }}'
+    use_proxy: '{{ aci_use_proxy | default(true) }}'
+    tenant: '{{ tenant_name }}'
+    ap: '{{ ap_name }}'
+    epg: '{{ epg_name }}'
+    encap_id:  '{{ static_port_vlan }}'
+    deploy_immediacy: '{{ deploy_immediacy }}'
+    interface_mode:  '{{ mode }}'
+    interface_type: port_channel
+    pod_id: 1
+    leafs: '{{ inner_item.0.sw_name }}'
+    interface: '{{ inner_item.1 }}'
+    state: present
+  with_subelements:
+     - "{{ static_ports }}"
+     - interface
+  loop_control:
+     loop_var: inner_item
+
+

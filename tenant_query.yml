@@ -1,0 +1,31 @@
+---
+- hosts: localhost
+  gather_facts: no
+
+  vars:
+    aci_hostname: 'svl-acisim-327.cisco.com'
+
+  vars_prompt:
+    - name: "aci_username"
+      prompt: "Logging into {{ aci_hostname }} - Enter USERNAME"
+      private: no
+    - name: "aci_password"
+      prompt: "Logging into {{ aci_hostname }} - Enter PASSWORD"
+      private: yes
+
+  tasks:
+    - name: Query a new tenant
+      aci_tenant:
+        host:     '{{ aci_hostname }}'
+        username: '{{ aci_username }}'
+        password: '{{ aci_password }}'
+        validate_certs: False
+        tenant: steve_tenant
+        description: tenant for Steve
+        state: query
+      delegate_to: localhost
+      register: query_result
+
+    - debug:
+        var:  query_result
+

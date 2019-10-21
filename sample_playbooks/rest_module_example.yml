@@ -1,0 +1,38 @@
+---
+- hosts: localhost
+  gather_facts: no
+
+  vars:
+    aci_hostname: 'svl-acisim-1.cisco.com'
+
+  vars_prompt:
+    - name: "aci_username"
+      prompt: "Logging into {{ aci_hostname }} - Enter USERNAME"
+      private: no
+    - name: "aci_password"
+      prompt: "Logging into {{ aci_hostname }} - Enter PASSWORD"
+      private: yes
+
+  tasks:
+
+    - name: create a Leaf Interface Profile with description
+      aci_rest:
+        host:     '{{ aci_hostname }}'
+        username: '{{ aci_username }}'
+        password: '{{ aci_password }}'
+        validate_certs: no
+        path: /api/node/mo/uni/infra/accportprof-sw4823-IfPrfl.json
+        method: post
+        content:
+          {
+            "infraAccPortP": {
+              "attributes": {
+                "dn": "uni/infra/accportprof-sw4823-IfPrfl",
+                "name": "sw4823-IfPrfl",
+                "rn": "accportprof-sw4823-IfPrfl",
+                "status": "created,modified"
+              },
+              "children": []
+            }
+          }
+      delegate_to: localhost

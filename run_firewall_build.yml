@@ -1,0 +1,50 @@
+---
+- hosts: localhost
+  gather_facts: no
+
+  vars_prompt:
+    - name: "aci_username"
+      prompt: "Enter aci_username"
+      private: no
+    - name: "aci_password"
+      prompt: "Enter aci_password"
+      private: yes
+
+  tasks:
+
+    - name: initialize results list for entire set of L3Outs (needs to be done prior to entering loop)
+      set_fact:
+        pre_check_results: []
+        post_check_results: []
+      tags:
+        - validate_input
+
+    - include_role:
+        name: l3out_complete
+        tasks_from: l3out_complete.yml
+      tags:
+        - validate_input
+      loop: "{{ l3outs }}"
+
+    - name: print pre-check list - if run with validate_input tag
+      debug:
+        var:  hostvars['localhost'].pre_check_results
+      tags: ['validate_input', 'never']
+
+    - include_role:
+        name: epg_create
+        tasks_from: epg_create.yml
+      vars:
+        epg_dict: "{{ epg_dict_dmz }}"
+      when:  create_dmz_epg_inter_fw_link
+
+    - include_role:
+        name: epg_create
+        tasks_from: epg_create.yml
+      vars:
+        epg_dict: "{{ epg_dict_sdmz }}"
+      when:  create_sdmz_epg_inter_fw_link
+
+    - name: print post-check list
+      debug:
+        var:  hostvars['localhost'].post_check_results

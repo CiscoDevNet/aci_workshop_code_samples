@@ -1,0 +1,1601 @@
+tenants:
+  -
+    name: "steve_tenant"
+    l3Outs:
+      -
+        name: internal-l3Out                # All abc-co address space
+        external-networks:
+          -
+            name: abc-co-internal-extNet
+            range:
+              - 10.0.0.0/8
+              - 20.0.0.0/8
+              - 30.0.0.0/8
+              - 40.0.0.0/8
+            contracts:
+              provide:
+                - default
+                - infra-ssh-out-contract
+                - storage-nas-int-contract
+                - gen-web-out-contract
+                - gen-web-out-int-contract
+                - gen-out-int-contract
+                - mig-web-out-int-contract
+                - mig-out-int-contract
+                - mig-in-int-contract
+                - mig-db-contract
+              consume:
+                - default
+                - infra-ssh-in-contract
+                - fabMgmt-inBand-contract
+                - gen-web-in-contract
+                - mig-web-in-contract
+                - storage-nas-int-contract
+          -
+            name: abc-co-dmz-extNet      # All abc-co DMZ address space
+            range:
+              - 10.0.0.0/8
+              - 20.0.0.0/8
+              - 30.0.0.0/8
+              - 40.0.0.0/8
+            contracts:
+              provide:
+                - infra-ssh-out-contract
+                - storage-nas-dmz-contract
+                - gen-web-out-contract
+                - gen-out-dmz-contract
+                - mig-web-out-dmz-contract
+                - mig-out-dmz-contract
+              consume:
+                - gen-web-in-contract
+                - mig-web-in-contract
+                - mig-in-dmz-contract
+          -
+            name: internet-extNet
+            range:
+                - 0.0.0.0/0
+            contracts:
+              provide:
+                - default
+                - gen-web-out-contract
+                - gen-out-internet-contract
+                - mig-out-internet-contract
+              consume:
+                - gen-web-in-contract
+                - mig-web-in-contract
+          -
+            name: infra-cspo-extNet
+            range:
+              - 10.0.0.0/8
+              - 20.0.0.0/8
+              - 30.0.0.0/8
+              - 40.0.0.0/8
+            contracts:
+              provide:
+                - infra-ssh-out-contract
+              consume:
+                - infra-permitAll-CSPO-contract
+          -
+            name: infra-eman-extNet
+            range:
+              - 10.0.0.0/8
+              - 20.0.0.0/8
+              - 30.0.0.0/8
+              - 40.0.0.0/8
+            contracts:
+              provide:
+                - infra-ssh-out-contract
+                - infra-snmp-contract
+                - infra-tftp-contract
+              consume:
+                - infra-permitAll-EMAN-contract
+          -
+            name: infra-tpam-extNet
+            range:
+              - 10.0.0.0/8
+              - 20.0.0.0/8
+              - 30.0.0.0/8
+              - 40.0.0.0/8
+            contracts:
+              provide:
+                - infra-ssh-out-contract
+              consume:
+                - infra-ssh-in-contract
+                - infra-tpam-contract
+          -
+            name: infra-ntp-extNet
+            range:
+              - 10.0.0.0/8
+              - 20.0.0.0/8
+              - 30.0.0.0/8
+              - 40.0.0.0/8
+            contracts:
+              provide:
+                - infra-ssh-out-contract
+                - infra-ntp-contract
+              consume:
+                - infra-ssh-in-contract
+          -
+            name: infra-tacacs-extNet
+            range:
+              - 10.0.0.0/8
+              - 20.0.0.0/8
+              - 30.0.0.0/8
+              - 40.0.0.0/8
+            contracts:
+              provide:
+                - infra-ssh-out-contract
+                - infra-tacacs-contract
+              consume:
+                - infra-ssh-in-contract
+          -
+            name: infra-tftp-extNet
+            range:
+              - 10.0.0.0/8
+              - 20.0.0.0/8
+              - 30.0.0.0/8
+              - 40.0.0.0/8
+            contracts:
+              provide:
+                - infra-ssh-out-contract
+                - infra-tftp-contract
+              consume:
+                - infra-ssh-in-contract
+          -
+            name: infra-smtp-extNet
+            range:
+              - 10.0.0.0/8
+              - 20.0.0.0/8
+              - 30.0.0.0/8
+              - 40.0.0.0/8
+            contracts:
+              provide:
+                - infra-ssh-out-contract
+                - infra-smtp-contract
+              consume:
+                - infra-ssh-in-contract
+          -
+            name: infra-dns-extNet
+            range:
+              - 10.0.0.0/8
+              - 20.0.0.0/8
+              - 30.0.0.0/8
+              - 40.0.0.0/8
+            contracts:
+              provide:
+                - infra-ssh-out-contract
+                - infra-dns-contract
+              consume:
+                - infra-ssh-in-contract
+          -
+            name: infra-osinfra-extNet
+            range:
+              - 10.0.0.0/8
+              - 20.0.0.0/8
+              - 30.0.0.0/8
+              - 40.0.0.0/8
+            contracts:
+              provide:
+                - infra-ssh-out-contract
+                - infra-osinfra-contract
+                - infra-tftp-contract
+                - infra-syslog-contract
+              consume:
+                - infra-ssh-in-contract
+          -
+            name: infra-winPostInstall-extNet
+            range:
+              - 10.0.0.0/8
+              - 20.0.0.0/8
+              - 30.0.0.0/8
+              - 40.0.0.0/8
+            contracts:
+              provide:
+                - infra-ssh-out-contract
+                - infra-winPostInstall-contract
+              consume:
+                - infra-ssh-in-contract
+          -
+            name: fnd-oam-prod-extNet
+            range:
+              - 10.0.0.0/8
+              - 20.0.0.0/8
+              - 30.0.0.0/8
+              - 40.0.0.0/8
+            contracts:
+              provide:
+                - infra-ssh-out-contract
+                - fnd-oam-prod-contract
+              consume:
+                - infra-ssh-in-contract
+          -
+            name: fnd-wsgx-prod-extNet
+            range:
+              - 10.0.0.0/8
+              - 20.0.0.0/8
+              - 30.0.0.0/8
+              - 40.0.0.0/8
+            contracts:
+              provide:
+                - infra-ssh-out-contract
+                - fnd-wsgx-prod-contract
+              consume:
+                - infra-ssh-in-contract
+          -
+            name: fnd-wsgi-prod-extNet
+            range:
+              - 10.0.0.0/8
+              - 20.0.0.0/8
+              - 30.0.0.0/8
+              - 40.0.0.0/8
+            contracts:
+              provide:
+                - infra-ssh-out-contract
+                - fnd-wsgi-prod-contract
+              consume:
+                - infra-ssh-in-contract
+          -
+            name: fnd-mmx-prod-extNet
+            range:
+              - 10.0.0.0/8
+              - 20.0.0.0/8
+              - 30.0.0.0/8
+              - 40.0.0.0/8
+            contracts:
+              provide:
+                - infra-ssh-out-contract
+                - fnd-mmx-prod-contract
+              consume:
+                - infra-ssh-in-contract
+          -
+            name: fnd-ocm-prod-extNet
+            range:
+              - 10.0.0.0/8
+              - 20.0.0.0/8
+              - 30.0.0.0/8
+              - 40.0.0.0/8
+            contracts:
+              provide:
+                - infra-ssh-out-contract
+                - fnd-ocm-prod-contract
+              consume:
+                - infra-ssh-in-contract
+          -
+            name: fnd-dsx-prod-extNet
+            range:
+              - 10.0.0.0/8
+              - 20.0.0.0/8
+              - 30.0.0.0/8
+              - 40.0.0.0/8
+            contracts:
+              provide:
+                - infra-ssh-out-contract
+                - fnd-dsx-prod-contract
+              consume:
+                - infra-ssh-in-contract
+          -
+            name: fnd-ds-prod-extNet
+            range:
+              - 10.0.0.0/8
+              - 20.0.0.0/8
+              - 30.0.0.0/8
+              - 40.0.0.0/8
+            contracts:
+              provide:
+                - infra-ssh-out-contract
+                - fnd-ds-prod-contract
+                - fnd-ds-nprod-contract # There is no nprod cluster. jbanner.
+                #- fnd-ds-idev-contract # There is no idev cluster. jbanner.
+              consume:
+                - infra-ssh-in-contract
+          -
+            name: fnd-oam-nprod-extNet
+            range:
+              - 10.0.0.0/8
+              - 20.0.0.0/8
+              - 30.0.0.0/8
+              - 40.0.0.0/8
+            contracts:
+              provide:
+                - infra-ssh-out-contract
+                - fnd-oam-nprod-contract
+              consume:
+                - infra-ssh-in-contract
+          -
+            name: fnd-wsgx-nprod-extNet
+            range:
+              - 10.0.0.0/8
+              - 20.0.0.0/8
+              - 30.0.0.0/8
+              - 40.0.0.0/8
+            contracts:
+              provide:
+                - infra-ssh-out-contract
+                - fnd-wsgx-nprod-contract
+              consume:
+                - infra-ssh-in-contract
+          -
+            name: fnd-wsgi-nprod-extNet
+            range:
+              - 10.0.0.0/8
+              - 20.0.0.0/8
+              - 30.0.0.0/8
+              - 40.0.0.0/8
+            contracts:
+              provide:
+                - infra-ssh-out-contract
+                - fnd-wsgi-nprod-contract
+              consume:
+                - infra-ssh-in-contract
+          -
+            name: fnd-mmx-nprod-extNet
+            range:
+              - 10.0.0.0/8
+              - 20.0.0.0/8
+              - 30.0.0.0/8
+              - 40.0.0.0/8
+            contracts:
+              provide:
+                - infra-ssh-out-contract
+                - fnd-mmx-nprod-contract
+              consume:
+                - infra-ssh-in-contract
+          -
+            name: fnd-ocm-nprod-extNet
+            range:
+              - 10.0.0.0/8
+              - 20.0.0.0/8
+              - 30.0.0.0/8
+              - 40.0.0.0/8
+            contracts:
+              provide:
+                - infra-ssh-out-contract
+                - fnd-ocm-nprod-contract
+              consume:
+                - infra-ssh-in-contract
+          -
+            name: fnd-dsx-nprod-extNet
+            range:
+              - 10.0.0.0/8
+              - 20.0.0.0/8
+              - 30.0.0.0/8
+              - 40.0.0.0/8
+            contracts:
+              provide:
+                - infra-ssh-out-contract
+                - fnd-dsx-nprod-contract
+              consume:
+                - infra-ssh-in-contract
+
+# VRF Contracts
+#tenants:
+#  -
+#    name: "common"
+    vrfs:
+      -
+        name: internal-vrf
+        contracts:
+          provide:
+            - infra-icmp-contract
+            - infra-permitAll-EMAN-contract
+            - infra-permitAll-CSPO-contract
+            - infra-ssh-in-contract
+            - infra-tcp-est-contract
+            - infra-tpam-contract
+          consume:
+            - infra-dns-contract
+            - infra-icmp-contract
+            - infra-ntp-contract
+            - infra-osinfra-contract
+            - infra-smtp-contract
+            - infra-snmp-contract
+            - infra-ssh-out-contract
+            - infra-syslog-contract
+            - infra-tacacs-contract
+            - infra-tcp-est-contract
+            - infra-tftp-contract
+            - infra-winPostInstall-contract
+      -
+        name: dmz-vrf
+        contracts:
+          provide:
+            - infra-icmp-contract
+            - infra-permitAll-EMAN-contract
+            - infra-permitAll-CSPO-contract
+            - infra-ssh-in-contract
+            - infra-tcp-est-contract
+            - infra-tpam-contract
+          consume:
+            - infra-dmz-avs-contract # This is DMZ specific, it does not exist in Internal or SimDMZ
+            - infra-dns-contract
+            - infra-icmp-contract
+            - infra-ntp-contract
+            - infra-osinfra-contract
+            - infra-smtp-contract
+            - infra-snmp-contract
+            - infra-ssh-out-contract
+            - infra-syslog-contract
+            - infra-tacacs-contract
+            - infra-tcp-est-contract
+            - infra-tftp-contract
+            - infra-winPostInstall-contract
+      -
+        name: simdmz-vrf
+        contracts:
+          provide:
+            - infra-icmp-contract
+            - infra-permitAll-EMAN-contract
+            - infra-permitAll-CSPO-contract
+            - infra-ssh-in-contract
+            - infra-tcp-est-contract
+            - infra-tpam-contract
+          consume:
+            - infra-dns-contract
+            - infra-icmp-contract
+            - infra-ntp-contract
+            - infra-osinfra-contract
+            - infra-smtp-contract
+            - infra-snmp-contract
+            - infra-ssh-out-contract
+            - infra-syslog-contract
+            - infra-tacacs-contract
+            - infra-tcp-est-contract
+            - infra-tftp-contract
+            - infra-winPostInstall-contract
+
+# Filters
+#tenants:
+#  -
+#    name: "common"
+    filters:
+      -
+        name: 'any-icmp-filter'
+        entries:
+          -
+            name: 'any-icmp'
+            protocol: 'icmp'
+      -
+        name: 'any-tcp-filter'
+        entries:
+          -
+            name: 'any-tcp'
+            protocol: 'tcp'
+      -
+        name: 'tcp-syn-filter'
+        entries:
+          -
+            name: 'tcp-syn'
+            protocol: 'tcp'
+            tcpFlags:
+              - 'syn'
+      -
+        name: 'tcp-est-filter'
+        entries:
+          -
+            name: 'tcp-est'
+            protocol: 'tcp'
+            tcpFlags:
+              - 'est'
+      -
+        name: 'any-udp-filter'
+        entries:
+          -
+            name: 'any-udp'
+            protocol: 'udp'
+      -
+        name: 'dst-tcp-ssh-filter'
+        entries:
+          -
+            name: 'dst-tcp-ssh'
+            protocol: 'tcp'
+            dst-start: '22'
+            dst-end: '22'
+      -
+        name: 'dst-tcp-smtp-filter'
+        entries:
+          -
+            name: 'dst-tcp-smtp'
+            protocol: 'tcp'
+            dst-start: '25'
+            dst-end: '25'
+      -
+        name: 'dst-tcp-tacacs-filter'
+        entries:
+          -
+            name: 'dst-tcp-tacacs'
+            protocol: 'tcp'
+            dst-start: '49'
+            dst-end: '49'
+      -
+        name: 'dst-tcp-dns-filter'
+        entries:
+          -
+            name: 'dst-tcp-dns'
+            protocol: 'tcp'
+            dst-start: '53'
+            dst-end: '53'
+      -
+        name: 'dst-tcp-http-filter'
+        entries:
+          -
+            name: 'dst-tcp-http'
+            protocol: 'tcp'
+            dst-start: '80'
+            dst-end: '80'
+      -
+        name: 'dst-tcp-111-filter'
+        entries:
+          -
+            name: 'dst-tcp-111'
+            protocol: 'tcp'
+            dst-start: '111'
+            dst-end: '111'
+      -
+        name: 'dst-udp-snmp-filter'
+        entries:
+          -
+            name: 'dst-udp-161-162'
+            protocol: 'udp'
+            dst-start: '161'
+            dst-end: '162'
+      -
+        name: 'dst-tcp-389-filter'
+        entries:
+          -
+            name: 'dst-tcp-389'
+            protocol: 'tcp'
+            dst-start: '389'
+            dst-end: '389'
+      -
+        name: 'dst-tcp-402-filter'
+        entries:
+          -
+            name: 'dst-tcp-402'
+            protocol: 'tcp'
+            dst-start: '402'
+            dst-end: '402'
+      -
+        name: 'dst-tcp-https-filter'
+        entries:
+          -
+            name: 'dst-tcp-https'
+            protocol: 'tcp'
+            dst-start: '443'
+            dst-end: '443'
+      -
+        name: 'dst-tcp-635-filter'
+        entries:
+          -
+            name: 'dst-tcp-635'
+            protocol: 'tcp'
+            dst-start: '635'
+            dst-end: '635'
+      -
+        name: 'dst-tcp-636-filter'
+        entries:
+          -
+            name: 'dst-tcp-636'
+            protocol: 'tcp'
+            dst-start: '636'
+            dst-end: '636'
+      -
+        name: 'dst-tcp-1234-filter'
+        entries:
+          -
+            name: 'dst-tcp-1234'
+            protocol: 'tcp'
+            dst-start: '1234'
+            dst-end: '1234'
+      -
+        name: 'dst-tcp-1433-filter'
+        entries:
+          -
+            name: 'dst-tcp-1433'
+            protocol: 'tcp'
+            dst-start: '1433'
+            dst-end: '1433'
+      -
+        name: 'dst-tcp-1521-filter'
+        entries:
+          -
+            name: 'dst-tcp-1521'
+            protocol: 'tcp'
+            dst-start: '1521'
+            dst-end: '1521'
+      -
+        name: 'dst-tcp-1600-filter'
+        entries:
+          -
+            name: 'dst-tcp-1600'
+            protocol: 'tcp'
+            dst-start: '1600'
+            dst-end: '1600'
+      -
+        name: 'dst-tcp-2049-filter'
+        entries:
+          -
+            name: 'dst-tcp-2049-filter'
+            protocol: 'tcp'
+            dst-start: '2049'
+            dst-end: '2049'
+      -
+        name: 'dst-tcp-3306-filter'
+        entries:
+          -
+            name: 'dst-tcp-3306'
+            protocol: 'tcp'
+            dst-start: '3306'
+            dst-end: '3306'
+      -
+        # TPAM
+        name: 'dst-tcp-3389-filter'
+        entries:
+          -
+            name: 'dst-tcp-3389'
+            protocol: 'tcp'
+            dst-start: '3389'
+            dst-end: '3389'
+      -
+        name: 'dst-tcp-4045-4047-filter'
+        entries:
+          -
+            name: 'tcp-4045-4047'
+            protocol: 'tcp'
+            dst-start: '4045'
+            dst-end: '4047'
+      -
+        name: 'dst-tcp-5222-filter'
+        entries:
+          -
+            name: 'dst-tcp-111'
+            protocol: 'tcp'
+            dst-start: '5222'
+            dst-end: '5222'
+      -
+        name: 'dst-tcp-6021-filter'
+        entries:
+          -
+            name: 'dst-tcp-6021'
+            protocol: 'tcp'
+            dst-start: '6021'
+            dst-end: '6021'
+      -
+        name: 'dst-tcp-7222-filter'
+        entries:
+          -
+            name: 'dst-tcp-7222'
+            protocol: 'tcp'
+            dst-start: '7222'
+            dst-end: '7222'
+      -
+        # Used by DMZ AVS.
+        name: 'dst-tcp-8081-filter'
+        entries:
+          -
+            name: 'dst-tcp-8081'
+            protocol: 'tcp'
+            dst-start: '8081'
+            dst-end: '8081'
+      -
+        name: 'dst-tcp-8089-filter'
+        entries:
+          -
+            name: 'dst-tcp-8089'
+            protocol: 'tcp'
+            dst-start: '8089'
+            dst-end: '8089'
+      -
+        name: 'dst-tcp-8140-filter'
+        entries:
+          -
+            name: 'dst-tcp-8140'
+            protocol: 'tcp'
+            dst-start: '8140'
+            dst-end: '8140'
+      -
+        name: 'dst-tcp-9997-filter'
+        entries:
+          -
+            name: 'dst-tcp-9997'
+            protocol: 'tcp'
+            dst-start: '9997'
+            dst-end: '9997'
+      -
+        name: 'dst-tcp-32772-filter'
+        entries:
+          -
+            name: 'dst-tcp-32772'
+            protocol: 'tcp'
+            dst-start: '32772'
+            dst-end: '32772'
+      -
+        name: 'dst-tcp-49152-65535-filter'
+        entries:
+          -
+            name: 'dst-tcp-49152-65535'
+            protocol: 'tcp'
+            dst-start: '49152'
+            dst-end: '65535'
+      -
+        name: 'dst-tcp-61613-filter'
+        entries:
+          -
+            name: 'dst-tcp-61613'
+            protocol: 'tcp'
+            dst-start: '61613'
+            dst-end: '61613'
+      -
+        name: 'dst-udp-tacacs-filter'
+        entries:
+          -
+            name: 'dst-udp-tacacs'
+            protocol: 'udp'
+            dst-start: '49'
+            dst-end: '49'
+      -
+        name: 'dst-udp-dns-filter'
+        entries:
+          -
+            name: 'dst-udp-dns'
+            protocol: 'udp'
+            dst-start: '53'
+            dst-end: '53'
+      -
+        name: 'dst-udp-tftp-filter'
+        entries:
+          -
+            name: 'dst-udp-tftp'
+            protocol: 'udp'
+            dst-start: '69'
+            dst-end: '69'
+      -
+        name: 'dst-udp-111-filter'
+        entries:
+          -
+            name: 'dst-udp-111'
+            protocol: 'udp'
+            dst-start: '111'
+            dst-end: '111'
+      -
+        name: 'dst-udp-ntp-filter'
+        entries:
+          -
+            name: 'dst-udp-ntp'
+            protocol: 'udp'
+            dst-start: '123'
+            dst-end: '123'
+      -
+        name: 'dst-udp-syslog-filter'
+        entries:
+          -
+            name: 'dst-udp-syslog'
+            protocol: 'udp'
+            dst-start: '514'
+            dst-end: '514'
+      -
+        name: 'dst-udp-635-filter'
+        entries:
+          -
+            name: 'dst-udp-635'
+            protocol: 'udp'
+            dst-start: '635'
+            dst-end: '635'
+      -
+        name: 'dst-udp-1234-filter'
+        entries:
+          -
+            name: 'dst-udp-1234-filter'
+            protocol: 'udp'
+            dst-start: '1234'
+            dst-end: '1234'
+      -
+        name: 'dst-udp-2049-filter'
+        entries:
+          -
+            name: 'dst-udp-2049'
+            protocol: 'udp'
+            dst-start: '2049'
+            dst-end: '2049'
+      -
+        name: 'dst-udp-4045-4057-filter'
+        entries:
+          -
+            name: 'dst-udp-4045-4057'
+            protocol: 'udp'
+            dst-start: '4045'
+            dst-end: '4047'
+      -
+        name: 'dst-udp-32772-filter'
+        entries:
+          -
+            name: 'dst-udp-32772'
+            protocol: 'udp'
+            dst-start: '32772'
+            dst-end: '32772'
+      -
+        name: 'dst-udp-49152-65535-filter'
+        entries:
+          -
+            name: 'dst-udp-49152-65535'
+            protocol: 'udp'
+            dst-start: '49152'
+            dst-end: '65535'
+      -
+          name: 'dst-udp-9000-65500-filter'
+          entries:
+              -
+                  name: 'dst-udp-9000-65500'
+                  protocol: 'udp'
+                  dst-start: '9000'
+                  dst-end: '65500'
+
+# Contracts
+#tenants:
+#  -
+#    name: "common"
+    contracts:
+      -
+        name: 'infra-tcp-est-contract'
+        description: 'TCP established'
+        scope: 'context'
+        subjects:
+          -
+            name: 'tcp-est'
+            isUniDirectional: True
+            filtersOutOfEPG:
+              - 'tcp-est-filter'
+      -
+        name: 'infra-dns-contract'
+        description: 'Infra Service: DNS'
+        scope: 'context'
+        subjects:
+          -
+            name: 'tcp-dns'
+            isUniDirectional: True
+            filtersIntoEPG:
+              - 'dst-tcp-dns-filter'
+          -
+            name: 'udp-dns'
+            isUniDirectional: False
+            filters:
+              - 'dst-udp-dns-filter'
+      -
+        name: 'infra-tacacs-contract'
+        description: 'Infra Service: TACACS+ authentication'
+        scope: 'context'
+        subjects:
+          -
+            name: 'tcp-tacacs'
+            isUniDirectional: True
+            filtersIntoEPG:
+              - 'dst-tcp-tacacs-filter'
+          -
+            name: 'udp-tacacs'
+            isUniDirectional: False
+            filters:
+              - 'dst-udp-tacacs-filter'
+      -
+        name: 'infra-ntp-contract'
+        description: 'Infra Service: Network Time Protocol'
+        scope: 'context'
+        subjects:
+          -
+            name: 'udp-ntp'
+            isUniDirectional: False
+            filters:
+              - 'dst-udp-ntp-filter'
+      -
+        name: 'infra-tftp-contract'
+        description: 'Infra Service: TFTP'
+        scope: 'context'
+        subjects:
+          -
+            name: 'udp-tftp'
+            isUniDirectional: False
+            filters:
+              - 'dst-udp-tftp-filter'
+          -
+            name: 'udp-dynamic-range'
+            isUniDirectional: False
+            filters:
+              - 'dst-udp-9000-65500-filter'
+      -
+        name: 'infra-osinfra-contract'
+        description: 'Infra Service: OS Infrastructure'
+        scope: 'context'
+        subjects:
+          -
+            name: 'ssh'
+            isUniDirectional: True
+            filtersIntoEPG:
+              - 'dst-tcp-ssh-filter'
+          -
+            name: 'http'
+            isUniDirectional: True
+            filtersIntoEPG:
+              - 'dst-tcp-http-filter'
+          -
+            name: 'https'
+            isUniDirectional: True
+            filtersIntoEPG:
+              - 'dst-tcp-https-filter'
+          -
+            name: 'tcp-5222'
+            isUniDirectional: True
+            filtersIntoEPG:
+              - 'dst-tcp-5222-filter'
+          -
+            name: 'tcp-8140'
+            isUniDirectional: True
+            filtersIntoEPG:
+              - 'dst-tcp-8140-filter'
+          -
+            name: 'tcp-61613'
+            isUniDirectional: True
+            filtersIntoEPG:
+              - 'dst-tcp-61613-filter'
+      -
+        name: 'infra-smtp-contract'
+        description: 'Infra Service: SMTP'
+        scope: 'context'
+        subjects:
+          -
+            name: 'smtp'
+            isUniDirectional: True
+            filtersIntoEPG:
+              - 'dst-tcp-smtp-filter'
+      -
+        name: 'infra-snmp-contract'
+        description: 'Infra Service: SNMP (mgmt)'
+        scope: 'context'
+        subjects:
+          -
+            name: 'snmp'
+            isUniDirectional: False
+            filters:
+              - 'dst-udp-snmp-filter'
+      -
+        name: 'infra-syslog-contract'
+        description: 'Infra Service: Syslog'
+        scope: 'context'
+        subjects:
+          -
+            name: 'udp-syslog'
+            isUniDirectional: False
+            filters:
+              - 'dst-udp-syslog-filter'
+          -
+            name: 'splunk-api'
+            isUniDirectional: True
+            filtersIntoEPG:
+              - 'dst-tcp-8089-filter'
+          -
+            name: 'splunk-comm'
+            isUniDirectional: True
+            filtersIntoEPG:
+              - 'dst-tcp-9997-filter'
+      -
+        name: 'infra-permitAll-contract'
+        description: 'Permit All'
+        scope: 'context'
+        subjects:
+          -
+            name: 'any-tcp'
+            filters:
+              - 'any-tcp-filter'
+          -
+            name: 'any-udp'
+            filters:
+              - 'any-udp-filter'
+          -
+            name: 'any-icmp'
+            filters:
+              - 'any-icmp-filter'
+      -
+        name: 'infra-permitAll-EMAN-contract'
+        description: 'Allow EMAN full access'
+        scope: 'context'
+        subjects:
+          -
+            name: 'dst-any-tcp'
+            isUniDirectional: True
+            filtersIntoEPG:
+              - 'any-tcp-filter'
+          -
+            name: 'any-udp'
+            filters:
+              - 'any-udp-filter'
+          -
+            name: 'any-icmp'
+            filters:
+              - 'any-icmp-filter'
+      -
+        name: 'infra-permitAll-CSPO-contract'
+        description: 'Allow CSPO full access'
+        scope: 'context'
+        subjects:
+          -
+            name: 'dst-any-tcp'
+            isUniDirectional: True
+            filtersIntoEPG:
+              - 'any-tcp-filter'
+          -
+            name: 'any-udp'
+            filters:
+              - 'any-udp-filter'
+          -
+            name: 'any-icmp'
+            filters:
+              - 'any-icmp-filter'
+      -
+        name: 'infra-ssh-in-contract'
+        description: 'Infra Service: Allow SSH into DC'
+        scope: 'context'
+        subjects:
+          -
+            name: 'ssh-to-fabric'
+            isUniDirectional: True
+            filtersIntoEPG:
+              - 'dst-tcp-ssh-filter'
+      -
+        name: 'infra-ssh-out-contract'
+        description: 'Infra Service: Allow SSH out of DC'
+        scope: 'context'
+        subjects:
+          -
+            name: 'ssh-from-fabric'
+            isUniDirectional: True
+            filtersIntoEPG:
+              - 'dst-tcp-ssh-filter'
+      -
+        name: 'infra-icmp-contract'
+        description: 'Infra Service: ICMP'
+        scope: 'context'
+        subjects:
+          -
+            name: 'any-icmp'
+            filters:
+              - 'any-icmp-filter'
+      -
+        name: 'infra-tpam-contract'
+        description: 'Infra Service: TPAM (High Security Terminal Access)'
+        scope: 'context'
+        subjects:
+          -
+            name: 'tcp-3389'
+            isUniDirectional: True
+            filtersIntoEPG:
+              - 'dst-tcp-3389-filter'
+      -
+        name: 'infra-dmz-avs-contract'
+          # This contract is DMZ Specific, it is not used by Internal or SimDMZ VRFs
+        description: 'Infra Service: DMZ Anti-Virus Update Service'
+        scope: 'context'
+        subjects:
+          -
+            name: 'tcp-http'
+            isUniDirectional: True
+            filtersIntoEPG:
+              - 'dst-tcp-http-filter'
+          -
+            name: 'tcp-https'
+            isUniDirectional: True
+            filtersIntoEPG:
+              - 'dst-tcp-https-filter'
+          -
+            name: 'tcp-8081'
+            isUniDirectional: True
+            filtersIntoEPG:
+              - 'dst-tcp-8081-filter'
+      -
+        name: 'infra-winPostInstall-contract'
+        description: 'Infra Service: Windows Post Install Management'
+        scope: 'context'
+        subjects:
+          -
+            name: 'altiris'
+            isUniDirectional: True
+            filtersIntoEPG:
+              - 'dst-tcp-402-filter'
+
+      # Standard Prod Foundation Contracts
+      -
+        name: 'fnd-oam-prod-contract'
+        description: 'Foundation Service: Oracle Access Mgr (Prod)'
+        scope: 'context'
+        subjects:
+          -
+            name: 'tcp-6021'
+            isUniDirectional: True
+            filtersIntoEPG:
+              - 'dst-tcp-6021-filter'
+      -
+        name: 'fnd-wsgx-prod-contract'
+        description: 'Foundation Service: Web Services Gateway-External (Prod)'
+        scope: 'context'
+        subjects:
+          -
+            name: 'tcp-http'
+            isUniDirectional: True
+            filtersIntoEPG:
+              - 'dst-tcp-http-filter'
+          -
+            name: 'tcp-https'
+            isUniDirectional: True
+            filtersIntoEPG:
+              - 'dst-tcp-https-filter'
+      -
+        name: 'fnd-wsgi-prod-contract'
+        description: 'Foundation Service: Web Services Gateway-Internal (Prod)'
+        scope: 'context'
+        subjects:
+          -
+            name: 'tcp-http'
+            isUniDirectional: True
+            filtersIntoEPG:
+              - 'dst-tcp-http-filter'
+          -
+            name: 'tcp-https'
+            isUniDirectional: True
+            filtersIntoEPG:
+              - 'dst-tcp-https-filter'
+      -
+        name: 'fnd-mmx-prod-contract'
+        description: 'Foundation Service: Messaging Middleware (MMX JMS Messaging) (Prod)'
+        scope: 'context'
+        subjects:
+          -
+            name: 'tcp-7222'
+            isUniDirectional: True
+            filtersIntoEPG:
+              - 'dst-tcp-7222-filter'
+      -
+        name: 'fnd-ocm-prod-contract'
+        description: 'Foundation Service: Oracle Connection Mgr (Prod)'
+        scope: 'context'
+        subjects:
+          -
+            name: 'tcp-1600'
+            isUniDirectional: True
+            filtersIntoEPG:
+              - 'dst-tcp-1600-filter'
+      -
+        name: 'fnd-dsx-prod-contract'
+        description: 'Foundation Service: Directory Services-External (Prod)'
+        scope: 'context'
+        subjects:
+          -
+            name: 'tcp-389'
+            isUniDirectional: True
+            filtersIntoEPG:
+              - 'dst-tcp-389-filter'
+          -
+            name: 'tcp-636'
+            isUniDirectional: True
+            filtersIntoEPG:
+              - 'dst-tcp-636-filter'
+      -
+        name: 'fnd-ds-prod-contract'
+        description: 'Foundation Service: Directory Services-Internal (Prod)'
+        scope: 'context'
+        subjects:
+          -
+            name: 'tcp-389'
+            isUniDirectional: True
+            filtersIntoEPG:
+              - 'dst-tcp-389-filter'
+          -
+            name: 'tcp-636'
+            isUniDirectional: True
+            filtersIntoEPG:
+              - 'dst-tcp-636-filter'
+      # Standard NonProd Foundation Contracts
+      -
+        name: 'fnd-oam-nprod-contract'
+        description: 'Foundation Service: Oracle Access Mgr (Non-Prod)'
+        scope: 'context'
+        subjects:
+          -
+            name: 'tcp-6021'
+            isUniDirectional: True
+            filtersIntoEPG:
+              - 'dst-tcp-6021-filter'
+      -
+        name: 'fnd-wsgx-nprod-contract'
+        description: 'Foundation Service: Web Services Gateway-External (Non-Prod)'
+        scope: 'context'
+        subjects:
+              # HTTP is not include in the VNMC Policy.
+              #-
+              #    name: 'tcp-http'
+              #    filters:
+              #    - 'dst-tcp-http-filter'
+          -
+            name: 'tcp-https'
+            isUniDirectional: True
+            filtersIntoEPG:
+              - 'dst-tcp-https-filter'
+      -
+        name: 'fnd-wsgi-nprod-contract'
+        description: 'Foundation Service: Web Services Gateway-Internal (Non-Prod)'
+        scope: 'context'
+        subjects:
+          -
+            name: 'tcp-http'
+            isUniDirectional: True
+            filtersIntoEPG:
+              - 'dst-tcp-http-filter'
+          -
+            name: 'tcp-https'
+            isUniDirectional: True
+            filtersIntoEPG:
+              - 'dst-tcp-https-filter'
+      -
+        name: 'fnd-mmx-nprod-contract'
+        description: 'Foundation Service: Messaging Middleware (MMX JMS Messaging) (Non-Prod)'
+        scope: 'context'
+        subjects:
+          -
+            name: 'tcp-7222'
+            isUniDirectional: True
+            filtersIntoEPG:
+              - 'dst-tcp-7222-filter'
+      -
+        name: 'fnd-ocm-nprod-contract'
+        description: 'Foundation Service: Oracle Connection Mgr (Non-Prod)'
+        scope: 'context'
+        subjects:
+          -
+            name: 'tcp-1600'
+            isUniDirectional: True
+            filtersIntoEPG:
+              - 'dst-tcp-1600-filter'
+      -
+        name: 'fnd-dsx-nprod-contract'
+        description: 'Foundation Service: Directory Services-External (Non-Prod)'
+        scope: 'context'
+        subjects:
+          -
+            name: 'tcp-389'
+            isUniDirectional: True
+            filtersIntoEPG:
+              - 'dst-tcp-389-filter'
+          -
+            name: 'tcp-636'
+            isUniDirectional: True
+            filtersIntoEPG:
+              - 'dst-tcp-636-filter'
+      -
+        name: 'fnd-ds-nprod-contract'
+        description: 'Foundation Service: Directory Services-Internal (Non-Prod)'
+        scope: 'context'
+        subjects:
+          -
+            name: 'tcp-389'
+            isUniDirectional: True
+            filtersIntoEPG:
+              - 'dst-tcp-389-filter'
+          -
+            name: 'tcp-636'
+            isUniDirectional: True
+            filtersIntoEPG:
+              - 'dst-tcp-636-filter'
+
+      # Standard Storage Contracts
+      -
+        name: 'storage-nas-contract'
+        scope: 'context'
+        subjects:
+          -
+            name: 'any-nas'
+            filters:
+              - 'any-tcp-filter'
+
+      # The ports here must be wrong, need to fix. Sent EMail to Storage team for input. 1-Sep - jbanner
+      # Do we need separate DMZ and Internal contracts? They will be the same set of rules, but one extNet and one EPG.
+
+      # Storage inside MT-IaaS, Internal hosts. This is built from the PNSC config.
+      -
+        name: 'storage-nas-int-contract'
+        scope: 'context'
+        subjects:
+          -
+            name: 'tcp-111'
+            isUniDirectional: True
+            filtersIntoEPG:
+              - 'dst-tcp-111-filter'
+          -
+            name: 'udp-111'
+            filters:
+              - 'dst-udp-111-filter'
+          -
+            name: 'tcp-635'
+            isUniDirectional: True
+            filtersIntoEPG:
+              - 'dst-tcp-635-filter'
+          -
+            name: 'udp-635'
+            filters:
+              - 'dst-udp-635-filter'
+          -
+            name: 'tcp-1234'
+            isUniDirectional: True
+            filtersIntoEPG:
+              - 'dst-tcp-1234-filter'
+          -
+            name: 'udp-1234'
+            filters:
+              - 'dst-udp-1234-filter'
+          -
+            name: 'tcp-2049'
+            isUniDirectional: True
+            filtersIntoEPG:
+              - 'dst-tcp-2049-filter'
+          -
+            name: 'udp-2049'
+            filters:
+              - 'dst-udp-2049-filter'
+          -
+            name: 'tcp-4045-4047'
+            isUniDirectional: True
+            filtersIntoEPG:
+              - 'dst-tcp-4045-4047-filter'
+          -
+            name: 'udp-4045-4047'
+            filters:
+              - 'dst-udp-4045-4057-filter'
+          -
+            name: 'udp-4049'
+            filters:
+              - 'dst-udp-4049-filter'
+          -
+            name: 'tcp-32772'
+            isUniDirectional: True
+            filtersIntoEPG:
+              - 'dst-tcp-32772-filter'
+          -
+            name: 'udp-32772'
+            filters:
+              - 'dst-udp-32772-filter'
+          -
+            name: 'tcp-49152-65535'
+            isUniDirectional: True
+            filtersIntoEPG:
+              - 'dst-tcp-49152-65535-filter'
+          -
+            name: 'udp-49152-65535'
+            filters:
+              - 'dst-udp-49152-65535-filter'
+
+      # Storage inside MT-IaaS, DMZ and SimDMZ hosts. This is built from the PNSC config.
+      -
+        name: 'storage-nas-dmz-contract'
+        scope: 'context'
+        subjects:
+          -
+            name: 'tcp-111'
+            isUniDirectional: True
+            filtersIntoEPG:
+              - 'dst-tcp-111-filter'
+          -
+            name: 'udp-111'
+            filters:
+              - 'dst-udp-111-filter'
+          -
+            name: 'tcp-1234'
+            isUniDirectional: True
+            filtersIntoEPG:
+              - 'dst-tcp-1234-filter'
+          -
+            name: 'udp-1234'
+            filters:
+              - 'dst-udp-1234-filter'
+          -
+            name: 'tcp-2049'
+            isUniDirectional: True
+            filtersIntoEPG:
+              - 'dst-tcp-2049-filter'
+          -
+            name: 'udp-2049'
+            filters:
+              - 'dst-udp-2049-filter'
+          -
+            name: 'tcp-4045-4047'
+            isUniDirectional: True
+            filtersIntoEPG:
+              - 'dst-tcp-4045-4047-filter'
+          -
+            name: 'udp-4045-4047'
+            filters:
+              - 'dst-udp-4045-4057-filter'
+          -
+            name: 'tcp-32772'
+            isUniDirectional: True
+            filtersIntoEPG:
+              - 'dst-tcp-32772-filter'
+          -
+            name: 'udp-32772'
+            filters:
+              - 'dst-udp-32772-filter'
+          -
+            name: 'tcp-49152-65535'
+            isUniDirectional: True
+            filtersIntoEPG:
+              - 'dst-tcp-49152-65535-filter'
+          -
+            name: 'udp-49152-65535'
+            filters:
+              - 'dst-udp-49152-65535-filter'
+
+      # In-Band Management Contracts
+      -
+        name: 'fabMgmt-inBand-contract'
+        description: 'Inband Fabric Mgmt'
+        scope: 'context'
+        subjects:
+          -
+            name: 'tcp-http'
+            isUniDirectional: True
+            filtersIntoEPG:
+              - 'dst-tcp-http-filter'
+          -
+            name: 'tcp-https'
+            isUniDirectional: True
+            filtersIntoEPG:
+              - 'dst-tcp-https-filter'
+          -
+            name: 'tcp-ssh'
+            filters:
+              - 'dst-tcp-ssh-filter'
+
+      # Other generic contracts
+
+      # Migration contract for access to Portal Server. Should go away eventually, hopefully sooner rather than later.
+      # This is a generic contract in the RTP1 MT-IaaS VNMC but appears to be an app interface. jbanner.
+      -
+        name: 'mig-portal-contract'
+        scope: 'context'
+        subjects:
+          -
+            name: 'tcp-https'
+            isUniDirectional: True
+            filtersIntoEPG:
+              - 'dst-tcp-https-filter'
+
+      # Note this contract has not yet been attached to anything, but it's a holder till we get the details as
+      # it is used by the conversion process. This would attach to 64.102.209.98 (at least in RTP1). sjb.
+
+      # Migration contract for inbound Web traffic. Bound to DMZ and Internal and Internet.
+      -
+        name: 'mig-web-in-contract'
+        scope: 'context'
+        subjects:
+          -
+            name: 'tcp-http'
+            isUniDirectional: True
+            filtersIntoEPG:
+              - 'dst-tcp-http-filter'
+          -
+            name: 'tcp-https'
+            isUniDirectional: True
+            filtersIntoEPG:
+              - 'dst-tcp-https-filter'
+
+      # Migration contract for outbound Web traffic to DMZ. To be provided by abc-co-dmz-extNet
+      -
+        name: 'mig-web-out-dmz-contract'
+        scope: 'context'
+        subjects:
+          -
+            name: 'tcp-http'
+            isUniDirectional: True
+            filtersIntoEPG:
+              - 'dst-tcp-http-filter'
+          -
+            name: 'tcp-https'
+            isUniDirectional: True
+            filtersIntoEPG:
+              - 'dst-tcp-https-filter'
+
+      # Migration contract for outbound Web traffic to DMZ. To be provided by abc-co-internal-extNet
+      -
+        name: 'mig-web-out-int-contract'
+        scope: 'context'
+        subjects:
+          -
+            name: 'tcp-http'
+            isUniDirectional: True
+            filtersIntoEPG:
+              - 'dst-tcp-http-filter'
+          -
+            name: 'tcp-https'
+            isUniDirectional: True
+            filtersIntoEPG:
+              - 'dst-tcp-https-filter'
+
+      # Migration contract for outbound traffic to DMZ. To be provided by abc-co-dmz-extNet
+      # Strictly used for Migration and to be phased out.
+      -
+        name: 'mig-out-dmz-contract'
+        scope: 'context'
+        subjects:
+          -
+            name: 'tcp-any'
+            isUniDirectional: True
+            filtersIntoEPG:
+              - 'any-tcp-filter'
+          -
+            name: 'udp-any'
+            filters:
+              - 'any-udp-filter'
+
+      # Migration contract to allow traffic from DMZ. To be provided by interim mt-iaas epg (security on vsg).
+      # Consumed on abc-co-dmz-extNet in internal-l3out.  Allows DMZ outside the fabric to reach mt-iaas interim
+      # epg.
+      # We may also want to have abc-co-internal-extNet on the dmz-l3out provide it with dmz epgs consuming.
+      # Strictly used for Migration and to be phased out.
+      -
+        name: 'mig-in-dmz-contract'
+        scope: 'context'
+        subjects:
+          -
+            name: 'tcp-any'
+            isUniDirectional: True
+            filtersIntoEPG:
+              - 'any-tcp-filter'
+          -
+            name: 'udp-any'
+            filters:
+              - 'any-udp-filter'
+
+      # Migration contract for outbound traffic to abc-co Internal. To be provided by abc-co-internal-extNet
+      # Strictly used for Migration and to be phased out.
+      -
+        name: 'mig-out-int-contract'
+        scope: 'context'
+        subjects:
+          -
+            name: 'tcp-any'
+            isUniDirectional: True
+            filtersIntoEPG:
+              - 'any-tcp-filter'
+          -
+            name: 'udp-any'
+            filters:
+              - 'any-udp-filter'
+
+      # Migration contract for inbound traffic from abc-co Internal. To be provided by abc-co-internal-extNet
+      # Note that this contract is specifically being defined backwards because the script that will apply
+      # the contract needs to use a "consume" at the Client EPG.
+      # Strictly used for Migration and to be phased out.
+      -
+        name: 'mig-in-int-contract'
+        scope: 'context'
+        subjects:
+          -
+            name: 'tcp-any'
+            isUniDirectional: True
+                  # Note: This is specifically defined "backwards" due to a limitation of the
+                  # script that will be used to apply it. - jbanner
+            filtersOutOfEPG:
+              - 'any-tcp-filter'
+          -
+            name: 'udp-any'
+            filters:
+              - 'any-udp-filter'
+
+      # Migration contract for outbound traffic to the Internet. To be provided by internet-extNet
+      # Strictly used for Migration and to be phased out.
+      -
+        name: 'mig-out-internet-contract'
+        scope: 'context'
+        subjects:
+          -
+            name: 'tcp-any'
+            isUniDirectional: True
+            filtersIntoEPG:
+              - 'any-tcp-filter'
+          -
+            name: 'udp-any'
+            filters:
+              - 'any-udp-filter'
