@@ -11,6 +11,10 @@ This repository contains sample code for automating various types of tasks relat
 These are the step by step instructions for the Cisco Live Devnet Workshop.  
 
 The samples include both Ansible playbooks and Python scripts utilizing Cobra SDK.
+
+# Workshop Instructions
+---
+
 # I. Environment Setup
 ---
 This is using Python 2. It is recommended to run this package in a virtual environment. 
