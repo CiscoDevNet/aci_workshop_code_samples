@@ -47,12 +47,12 @@ source aci-workshop/bin/activate
 **6. Clone aci-prog-workshop repository**
 
 ```text
-git clone https://github.com/sheerens/temp_workshop_repo.git   (FIX THIS!!!!)
+git clone https://github.com/CiscoDevNet/aci_workshop_code_samples.git
 ```
 **7. Change directory**
 
 ```text
-cd temp_workshop_repo     (FIX THIS!!!!)
+cd aci_workshop_code_samples
 ```
 
 **8. Install requirements**
@@ -74,7 +74,7 @@ THIS STEP HAS ALREADY BEEN DONE FOR YOU:
    
 	download cobra eggs - from https://<apic>/cobra/_downloads
    
-	The 2 egg files have been placed in your ./Downloads directory
+	The 2 egg files have been placed in your Downloads directory
 ```
 
 **11. Change directory**
@@ -106,10 +106,10 @@ Browse to your APIC simulator: https://<ip address> and login
 
 ***Create a Unique Tenant***
 
-**15. In Terminal, return to "aci-workshop" directory**
+**15. In Terminal, return to "aci_workshop_code_samples" directory**
 
 ```text
-cd $HOME/aci-workshop
+cd $HOME/aci_workshop_code_samples
 ```
 
 **16. Open the file "tenant_create.yml" using TextEdit**
@@ -171,7 +171,7 @@ SAVE YOUR CHANGES - click on File, click on Save
 **23. In Terminal, change directory to aci-workshop/playbook_vars/aci_workshop_fab1**
 
 ```text
-cd $HOME/aci-workshop/playbook_vars/aci_workshop_fab1
+cd $HOME/aci_workshop_code_samples/playbook_vars/aci_workshop_fab1
 ```
 
 
@@ -197,7 +197,7 @@ SAVE YOUR CHANGES - click on File, click on Save
 **26. In Terminal, change directory to aci-workshop**
 
 ```text
-cd $HOME/aci-workshop
+cd $HOME/aci_workshop_code_samples
 ```
 
 
@@ -224,7 +224,7 @@ cd $HOME/aci-workshop
 **29. Change to python_scripts directory**
 
 ```text
-	cd $HOME/aci-workshop/python_scripts 
+	cd $HOME/aci_workshop_code_samples/python_scripts 
 ```
 
 **30. Open the file "policy_cfg_source.yml" using TextEdit**
@@ -240,7 +240,7 @@ Verify or make changes to insure the tenant name is correct:
 	
 	tenants:
       -
-        name: "steve_tenant"
+        name: "<this is YOUR tenant you just created>"
 	
 SAVE YOUR CHANGES - click on File, click on Save
 ```
@@ -255,7 +255,7 @@ SAVE YOUR CHANGES - click on File, click on Save
 **33. Execute the python script**
 
 ```text
-	python fabric_base.py -a <your apic> -u admin -p <password>
+	python policy_cfg.py -a <your apic> -u admin -p <password> -f policy_cfg_source.yml
 ```
 
 ***Time Permitting:***
@@ -264,7 +264,7 @@ SAVE YOUR CHANGES - click on File, click on Save
 **34. Change to python_scripts directory**
 
 ```text
-	cd $HOME/aci-workshop/python_scripts 
+	cd $HOME/aci_workshop_code_samples/python_scripts 
 ```
 
 **35. Return to the command line, and view the Python script options**
@@ -285,7 +285,7 @@ SAVE YOUR CHANGES - click on File, click on Save
 **37. Change to python_scripts directory**
 
 ```text
-	cd $HOME/aci-workshop/python_scripts 
+	cd $HOME/aci_workshop_code_samples/python_scripts 
 ```
 
 **38. Open this file and examine contents:  base_config.yml**

@@ -1,6 +1,6 @@
 tenants:
   -
-    name: "steve_tenant"
+    name: "<insert YOUR tenant name within the quotes>"
     l3Outs:
       -
         name: internal-l3Out                # All abc-co address space
