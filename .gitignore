@@ -1,0 +1,23 @@
+### Ansible template
+*.retry
+*.pyc
+
+# User-specific stuff:
+.idea
+.idea/**/workspace.xml
+.idea/**/tasks.xml
+.idea/dictionaries
+
+.vagrant
+
+# Add more
+logfile.log
+README-save.md
+.DS_Store
+
+temp_json_files/int*.txt
+temp_json_files/logical*.txt
+temp_json_files/node*.txt
+temp_json_files/tenant.txt
+
+delete_fw_test_elements.yml
