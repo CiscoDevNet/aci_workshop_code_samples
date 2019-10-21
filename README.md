@@ -44,7 +44,7 @@ virtualenv aci-workshop
 source aci-workshop/bin/activate
 ```
 
-**6. Clone aci-prog-workshop repository**
+**6. Clone "aci_workshop_code_samples" repository**
 
 ```text
 git clone https://github.com/CiscoDevNet/aci_workshop_code_samples.git
