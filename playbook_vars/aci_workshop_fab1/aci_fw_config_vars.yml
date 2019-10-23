@@ -721,7 +721,7 @@ epg_dict_dmz:
   ap_name:      firepower-ap
   epg_name:     dmz-int-epg
 
-  static_port_vlan:  514
+  static_port_vlan:  '{{ range(550, 750) | random }}'
   static_ports:
     - {sw_name: '3823', interface: ['ftd-int-fw1-IfPolGrp', 'ftd-dmz-fw1-IfPolGrp']}
     - {sw_name: '3824', interface: ['ftd-int-fw2-IfPolGrp', 'ftd-dmz-fw2-IfPolGrp']}

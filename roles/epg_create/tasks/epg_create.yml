@@ -221,5 +221,5 @@
      - interface
   loop_control:
      loop_var: inner_item
-
+  ignore_errors: True
 
