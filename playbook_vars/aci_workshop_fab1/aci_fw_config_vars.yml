@@ -4,12 +4,12 @@
 ##############  Section 1 of 4  -  SITE SPECIFIC VARS ##############
 
 
-aci_hostname: 'svl-acisim-327.cisco.com'
+aci_hostname: 'MY-APIC-HOSTNAME'
 aci_validate_certs: no
 aci_use_ssl: yes
 aci_use_proxy: no
 
-aci_tenant:  'steve_tenant'
+aci_tenant:  'MY-TENANT-NAME'
 
 ##############  Section 2 of 4  -  LIST of L3OUTS to CREATE/MODIFY ##############
 

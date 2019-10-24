@@ -3,7 +3,7 @@
   gather_facts: no
 
   vars:
-    aci_hostname: 'svl-acisim-327.cisco.com'
+    aci_hostname: 'MY-APIC-HOSTNAME'
 
   vars_prompt:
     - name: "aci_username"
@@ -20,8 +20,8 @@
         username: '{{ aci_username }}'
         password: '{{ aci_password }}'
         validate_certs: False
-        tenant: steve_tenant
-        description: tenant for Steve
+        tenant: MY-TENANT-NAME
+        description: MY-TENANT-DESCRIPTION
         state: query
       delegate_to: localhost
       register: query_result
