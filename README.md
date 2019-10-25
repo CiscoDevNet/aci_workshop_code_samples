@@ -140,49 +140,25 @@ SAVE YOUR CHANGES - click on File, click on Save
 ```text
 	Browse to your APIC simulator: https://<ip address> and login
 ```
-***Verify tenant creation with Ansible playbook***
 
-**20. Open the file "tenant_query.yml" using TextEdit**
-
-```text
-open -e tenant_query.yml
-
-```
-
-**21. Make these changes to the file:  tenant_query.yml**
-```text
-Verify or make changes to insure these fields are as noted:
-	
-	aci_hostname:  <your APIC simulator>
-	tenant:        <your unique tenant name>
-	description:   <some description>
-	
-SAVE YOUR CHANGES - click on File, click on Save
-```
-
-**22. Return to command line and execute the Playbook**
-
-```text
-	ansible-playbook tenant_query.yml
-```
 
 ***Run the Ansible Playbook to create ACI Firewall Config***
 
-**23. In Terminal, change directory to aci-workshop/playbook_vars/aci_workshop_fab1**
+**20. In Terminal, change directory to aci-workshop/playbook_vars/aci_workshop_fab1**
 
 ```text
 cd $HOME/aci_workshop_code_samples/playbook_vars/aci_workshop_fab1
 ```
 
 
-**24. Open the file "aci_fw_config_vars.yml" using TextEdit**
+**21. Open the file "aci_fw_config_vars.yml" using TextEdit**
 
 ```text
 open -e aci_fw_config_vars.yml
 
 ```
 
-**25. Modify this file: aci_fw_config_vars.yml**
+**22. Modify this file: aci_fw_config_vars.yml**
 ```text
 Note: this is the input variable file for the Playbook we will run later.
 	
@@ -194,7 +170,7 @@ Verify or make changes to insure these fields are as noted:
 SAVE YOUR CHANGES - click on File, click on Save
 ```
 
-**26. In Terminal, change directory to aci-workshop**
+**23. In Terminal, change directory to aci-workshop**
 
 ```text
 cd $HOME/aci_workshop_code_samples
@@ -202,13 +178,13 @@ cd $HOME/aci_workshop_code_samples
 
 
 
-**27. Return to command line and execute the Playbook**
+**24. Return to command line and execute the Playbook**
 
 ```text
 	ansible-playbook run_firewall_build_demo.yml -e @./playbook_vars/aci_workshop_fab1/aci_fw_config_vars.yml
 ```
 
-**28. Login to APIC to Verify/Monitor changes within your tenant's Networking section**
+**25. Login to APIC to Verify/Monitor changes within your tenant's Networking section**
 
 ```text
 	Browse to your APIC simulator: https://<ip address> and login
@@ -221,20 +197,20 @@ cd $HOME/aci_workshop_code_samples
 
 ***Security Policy Configuration***
 
-**29. Change to python_scripts directory**
+**26. Change to python_scripts directory**
 
 ```text
 	cd $HOME/aci_workshop_code_samples/python_scripts 
 ```
 
-**30. Open the file "policy_cfg_source.yml" using TextEdit**
+**27. Open the file "policy_cfg_source.yml" using TextEdit**
 
 ```text
 open -e policy_cfg_source.yml
 ```
 
 
-**31. Modify this file:  policy_cfg_source.yml**
+**28. Modify this file:  policy_cfg_source.yml**
 ```text
 Verify or make changes to insure the tenant name is correct:
 	
@@ -245,14 +221,14 @@ Verify or make changes to insure the tenant name is correct:
 SAVE YOUR CHANGES - click on File, click on Save
 ```
 
-**32. Return to command line, and view the Python script options**
+**29. Return to command line, and view the Python script options**
 
 ```text
 	python policy_cfg.py -h
 ```
 
 
-**33. Execute the python script**
+**30. Execute the python script**
 
 ```text
 	python policy_cfg.py -a <your apic> -u admin -p <password> -f policy_cfg_source.yml
@@ -261,19 +237,19 @@ SAVE YOUR CHANGES - click on File, click on Save
 ***Time Permitting:***
 ***Fabric Discovery***
 
-**34. Change to python_scripts directory**
+**31. Change to python_scripts directory**
 
 ```text
 	cd $HOME/aci_workshop_code_samples/python_scripts 
 ```
 
-**35. Return to the command line, and view the Python script options**
+**32. Return to the command line, and view the Python script options**
 
 ```text
 	python fabric_site_specific.py -h
 ```
 
-**36. Execute the python script**
+**33. Execute the python script**
 
 ```text
 	python fabric_site_specific.py -a <your apic> -u admin -p <password> -f fabric_site_acisim.yml
@@ -282,13 +258,13 @@ SAVE YOUR CHANGES - click on File, click on Save
 ***Time Permitting:***
 ***Fabric Base Configuration***
 
-**37. Change to python_scripts directory**
+**34. Change to python_scripts directory**
 
 ```text
 	cd $HOME/aci_workshop_code_samples/python_scripts 
 ```
 
-**38. Open this file and examine contents:  base_config.yml**
+**35. Open this file and examine contents:  base_config.yml**
 
 ```text
  open -e policy_cfg_source.yml
@@ -296,13 +272,13 @@ SAVE YOUR CHANGES - click on File, click on Save
    Note:  This file is the source/input file for the base configuration script.
 
 
-**39. Return to the command line, and view the Python script options**
+**36. Return to the command line, and view the Python script options**
 
 ```text
 	python fabric_base.py -h
 ```
 
-**40. Execute the python script**
+**37. Execute the python script**
 
 ```text
 	python fabric_base.py -a <your apic> -u admin -p <password>
