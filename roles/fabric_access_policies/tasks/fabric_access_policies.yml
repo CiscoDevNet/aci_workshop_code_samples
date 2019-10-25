@@ -194,6 +194,7 @@
     - not item.int_policy_group1_exists
     - port_type == 'port-channel'
     - if_pol_1_found.totalCount == 0
+  ignore_errors: True
 
 - name: create ifPolGrp2 - port-channel - from JSON template
   template:
@@ -222,6 +223,7 @@
     - not item.int_policy_group2_exists
     - port_type == 'port-channel'
     - if_pol_2_found.totalCount == 0
+  ignore_errors: True
 
 # create interface selectors - 4 iterations for up to 4 links
 
