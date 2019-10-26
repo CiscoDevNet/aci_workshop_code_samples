@@ -234,52 +234,29 @@ SAVE YOUR CHANGES - click on File, click on Save
 	python policy_cfg.py -a <your apic> -u admin -p <password> -f policy_cfg_source.yml
 ```
 
+**31. Login to APIC to Verify/Monitor changes within your tenant's Contract section**
+
+```text
+	Browse to your APIC simulator: https://<ip address> and login
+```
+
 ***Time Permitting:***
 ***Fabric Discovery***
 
-**31. Change to python_scripts directory**
+**32. Change to python_scripts directory**
 
 ```text
 	cd $HOME/aci_workshop_code_samples/python_scripts 
 ```
 
-**32. Return to the command line, and view the Python script options**
+**33. Return to the command line, and view the Python script options**
 
 ```text
 	python fabric_site_specific.py -h
 ```
 
-**33. Execute the python script**
+**34. Execute the python script**
 
 ```text
 	python fabric_site_specific.py -a <your apic> -u admin -p <password> -f fabric_site_acisim.yml
-```
-
-***Time Permitting:***
-***Fabric Base Configuration***
-
-**34. Change to python_scripts directory**
-
-```text
-	cd $HOME/aci_workshop_code_samples/python_scripts 
-```
-
-**35. Open this file and examine contents:  base_config.yml**
-
-```text
- open -e policy_cfg_source.yml
-```
-   Note:  This file is the source/input file for the base configuration script.
-
-
-**36. Return to the command line, and view the Python script options**
-
-```text
-	python fabric_base.py -h
-```
-
-**37. Execute the python script**
-
-```text
-	python fabric_base.py -a <your apic> -u admin -p <password>
 ```

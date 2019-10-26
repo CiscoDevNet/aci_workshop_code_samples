@@ -291,7 +291,7 @@ SAVE YOUR CHANGES - click on File, click on Save
 **38. Open this file and examine contents:  base_config.yml**
 
 ```text
- open -e policy_cfg_source.yml
+ open -e base_config.yml
 ```
    Note:  This file is the source/input file for the base configuration script.
 
