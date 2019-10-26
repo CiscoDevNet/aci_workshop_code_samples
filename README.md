@@ -144,7 +144,7 @@ SAVE YOUR CHANGES - click on File, click on Save
 
 ***Run the Ansible Playbook to create ACI Firewall Config***
 
-**20. In Terminal, change directory to aci-workshop/playbook_vars/aci_workshop_fab1**
+**20. In Terminal, change directory to aci_workshop_code_samples/playbook_vars/aci_workshop_fab1**
 
 ```text
 cd $HOME/aci_workshop_code_samples/playbook_vars/aci_workshop_fab1
