@@ -10,6 +10,17 @@ This repository contains sample code for automating various types of tasks relat
 
 Following are the step by step instructions for the Cisco Live Devnet Workshop.  The samples include both Ansible playbooks and Python scripts utilizing Cobra SDK.
 
+# Workshop Test APICs
+
+https://128.107.232.40    (admin , cisco12345)
+
+https://128.107.232.41    (admin , cisco12345)
+
+https://128.107.232.42    (admin , cisco12345)
+
+https://128.107.232.43    (admin , cisco12345)
+
+
 # Workshop Instructions
 ---
 
