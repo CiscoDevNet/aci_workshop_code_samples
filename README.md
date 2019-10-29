@@ -29,45 +29,57 @@ cd
 **3. Install virtual environment package**
 
 ```text
-pip install virtualenv   (may need: sudo pip install virtualenv)
+sudo pip install virtualenv
 ```
 
-**4. Create a virtual environment for this workshop**
+**4. Check your default version of Python**
+
+```text
+python --version
+```
+
+**5(a). If python version is 2.x then do this:**
 
 ```text
 virtualenv aci-workshop
 ```
 
-**5. Activate the virtual environment**
+**5(b). If python version is 3.x then do this:**
+
+```text
+virtualenv aci-workshop --python=/usr/bin/python2.7
+```
+
+**6. Activate the virtual environment**
 
 ```text
 source aci-workshop/bin/activate
 ```
 
-**6. Clone "aci_workshop_code_samples" repository**
+**7. Clone "aci_workshop_code_samples" repository**
 
 ```text
 git clone https://github.com/CiscoDevNet/aci_workshop_code_samples.git
 ```
-**7. Change directory**
+**8. Change directory**
 
 ```text
 cd aci_workshop_code_samples
 ```
 
-**8. Install requirements**
+**9. Install requirements**
 
 ```text
 pip install -r requirements.txt
 ```
 
-**9. Install Ansible**
+**10. Install Ansible**
 
 ```text
 pip install ansible==2.7.8
 ```
 
-**10. Download Cobra SDK egg files**
+**11. Download Cobra SDK egg files**
 
 ```text
 THIS STEP HAS ALREADY BEEN DONE FOR YOU:
@@ -77,24 +89,24 @@ THIS STEP HAS ALREADY BEEN DONE FOR YOU:
 	The 2 egg files have been placed in your Downloads directory
 ```
 
-**11. Change directory**
+**12. Change directory**
 
 ```text
 cd $HOME/Downloads
 ```
 
-**12. Install Cisco APIC Python SDK - acicobra egg file**
+**13. Install Cisco APIC Python SDK - acicobra egg file**
 
 ```text
 easy_install -Z acicobra-3.2_7f-py2.7.egg
 ```
-**13. Install Cisco APIC Python SDK - acimodel egg file**
+**14. Install Cisco APIC Python SDK - acimodel egg file**
 
 ```text
 easy_install -Z acimodel-3.2_7f-py2.7.egg
 ```
 
-**14. Test APIC Access**
+**15. Test APIC Access**
 
 ```text
 Browse to your APIC simulator: https://<ip address> and login
@@ -106,19 +118,19 @@ Browse to your APIC simulator: https://<ip address> and login
 
 ***Create a Unique Tenant***
 
-**15. In Terminal, return to "aci_workshop_code_samples" directory**
+**16. In Terminal, return to "aci_workshop_code_samples" directory**
 
 ```text
 cd $HOME/aci_workshop_code_samples
 ```
 
-**16. Open the file "tenant_create.yml" using TextEdit**
+**17. Open the file "tenant_create.yml" using TextEdit**
 
 ```text
 open -e tenant_create.yml
 ```
 
-**17. Make these changes to the file:  tenant_create.yml**
+**18. Make these changes to the file:  tenant_create.yml**
 ```text
 Verify or make changes to insure these fields are as noted:
 	
@@ -129,13 +141,13 @@ Verify or make changes to insure these fields are as noted:
 SAVE YOUR CHANGES - click on File, click on Save
 ```
 
-**18. Return to command line and execute the Playbook**
+**19. Return to command line and execute the Playbook**
 
 ```text
 	ansible-playbook tenant_create.yml
 ```
 
-**19. Verify tenant was created in Web UI**
+**20. Verify tenant was created in Web UI**
 
 ```text
 	Browse to your APIC simulator: https://<ip address> and login
@@ -144,21 +156,21 @@ SAVE YOUR CHANGES - click on File, click on Save
 
 ***Run the Ansible Playbook to create ACI Firewall Config***
 
-**20. In Terminal, change directory to aci_workshop_code_samples/playbook_vars/aci_workshop_fab1**
+**21. In Terminal, change directory to aci_workshop_code_samples/playbook_vars/aci_workshop_fab1**
 
 ```text
 cd $HOME/aci_workshop_code_samples/playbook_vars/aci_workshop_fab1
 ```
 
 
-**21. Open the file "aci_fw_config_vars.yml" using TextEdit**
+**22. Open the file "aci_fw_config_vars.yml" using TextEdit**
 
 ```text
 open -e aci_fw_config_vars.yml
 
 ```
 
-**22. Modify this file: aci_fw_config_vars.yml**
+**23. Modify this file: aci_fw_config_vars.yml**
 ```text
 Note: this is the input variable file for the Playbook we will run later.
 	
@@ -170,7 +182,7 @@ Verify or make changes to insure these fields are as noted:
 SAVE YOUR CHANGES - click on File, click on Save
 ```
 
-**23. In Terminal, change directory to aci-workshop**
+**24. In Terminal, change directory to aci-workshop**
 
 ```text
 cd $HOME/aci_workshop_code_samples
@@ -178,13 +190,13 @@ cd $HOME/aci_workshop_code_samples
 
 
 
-**24. Return to command line and execute the Playbook**
+**25. Return to command line and execute the Playbook**
 
 ```text
 	ansible-playbook run_firewall_build_demo.yml -e @./playbook_vars/aci_workshop_fab1/aci_fw_config_vars.yml
 ```
 
-**25. Login to APIC to Verify/Monitor changes within your tenant's Networking section**
+**26. Login to APIC to Verify/Monitor changes within your tenant's Networking section**
 
 ```text
 	Browse to your APIC simulator: https://<ip address> and login
@@ -197,20 +209,20 @@ cd $HOME/aci_workshop_code_samples
 
 ***Security Policy Configuration***
 
-**26. Change to python_scripts directory**
+**27. Change to python_scripts directory**
 
 ```text
 	cd $HOME/aci_workshop_code_samples/python_scripts 
 ```
 
-**27. Open the file "policy_cfg_source.yml" using TextEdit**
+**28. Open the file "policy_cfg_source.yml" using TextEdit**
 
 ```text
 open -e policy_cfg_source.yml
 ```
 
 
-**28. Modify this file:  policy_cfg_source.yml**
+**29. Modify this file:  policy_cfg_source.yml**
 ```text
 Verify or make changes to insure the tenant name is correct:
 	
@@ -221,20 +233,20 @@ Verify or make changes to insure the tenant name is correct:
 SAVE YOUR CHANGES - click on File, click on Save
 ```
 
-**29. Return to command line, and view the Python script options**
+**30. Return to command line, and view the Python script options**
 
 ```text
 	python policy_cfg.py -h
 ```
 
 
-**30. Execute the python script**
+**31. Execute the python script**
 
 ```text
 	python policy_cfg.py -a <your apic> -u admin -p <password> -f policy_cfg_source.yml
 ```
 
-**31. Login to APIC to Verify/Monitor changes within your tenant's Contract section**
+**33. Login to APIC to Verify/Monitor changes within your tenant's Contract section**
 
 ```text
 	Browse to your APIC simulator: https://<ip address> and login
@@ -243,19 +255,19 @@ SAVE YOUR CHANGES - click on File, click on Save
 ***Time Permitting:***
 ***Fabric Discovery***
 
-**32. Change to python_scripts directory**
+**33. Change to python_scripts directory**
 
 ```text
 	cd $HOME/aci_workshop_code_samples/python_scripts 
 ```
 
-**33. Return to the command line, and view the Python script options**
+**34. Return to the command line, and view the Python script options**
 
 ```text
 	python fabric_site_specific.py -h
 ```
 
-**34. Execute the python script**
+**35. Execute the python script**
 
 ```text
 	python fabric_site_specific.py -a <your apic> -u admin -p <password> -f fabric_site_acisim.yml
