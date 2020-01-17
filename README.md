@@ -4,7 +4,7 @@
 # Summary
 ---
 
-Collection of simple code samples for ACI programmability. Includes beginner level ansible playbooks and python code snippets used or referenced in DevNet Workshop DEVWKS-1309 
+Collection of simple code samples for ACI programmability. Includes beginner level ansible playbooks and python code snippets used or referenced in DevNet Workshop DEVWKS-1309.
 
 This repository contains sample code for automating various types of tasks relating to ACI configuration and initial ACI fabric bringup.
 
