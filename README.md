@@ -153,13 +153,13 @@ SAVE YOUR CHANGES - click on File, click on Save
 **19. Return to command line and execute the Playbook**
 
 ```text
-	ansible-playbook tenant_create.yml
+ansible-playbook tenant_create.yml
 ```
 
 **20. Verify tenant was created in Web UI**
 
 ```text
-	Browse to your APIC simulator: https://<ip address> and login
+  Browse to your APIC simulator: https://<ip address> and login
 ```
 
 
@@ -202,7 +202,7 @@ cd $HOME/aci_workshop_code_samples
 **25. Return to command line and execute the Playbook**
 
 ```text
-	ansible-playbook run_firewall_build_demo.yml -e @./playbook_vars/aci_workshop_fab1/aci_fw_config_vars.yml
+ansible-playbook run_firewall_build_demo.yml -e @./playbook_vars/aci_workshop_fab1/aci_fw_config_vars.yml
 ```
 
 **26. Login to APIC to Verify/Monitor changes within your tenant's Networking section**
@@ -221,7 +221,7 @@ cd $HOME/aci_workshop_code_samples
 **27. Change to python_scripts directory**
 
 ```text
-	cd $HOME/aci_workshop_code_samples/python_scripts
+cd $HOME/aci_workshop_code_samples/python_scripts
 ```
 
 **28. Open the file "policy_cfg_source.yml" using Atom**
@@ -245,14 +245,14 @@ SAVE YOUR CHANGES - click on File, click on Save
 **30. Return to command line, and view the Python script options**
 
 ```text
-	python policy_cfg.py -h
+python policy_cfg.py -h
 ```
 
 
 **31. Execute the python script**
 
 ```text
-	python policy_cfg.py -a <your apic> -u admin -p <password> -f policy_cfg_source.yml
+python policy_cfg.py -a <your apic> -u admin -p <password> -f policy_cfg_source.yml
 ```
 
 **33. Login to APIC to Verify/Monitor changes within your tenant's Contract section**
@@ -267,17 +267,17 @@ SAVE YOUR CHANGES - click on File, click on Save
 **33. Change to python_scripts directory**
 
 ```text
-	cd $HOME/aci_workshop_code_samples/python_scripts
+cd $HOME/aci_workshop_code_samples/python_scripts
 ```
 
 **34. Return to the command line, and view the Python script options**
 
 ```text
-	python fabric_site_specific.py -h
+python fabric_site_specific.py -h
 ```
 
 **35. Execute the python script**
 
 ```text
-	python fabric_site_specific.py -a <your apic> -u admin -p <password> -f fabric_site_acisim.yml
+python fabric_site_specific.py -a <your apic> -u admin -p <password> -f fabric_site_acisim.yml
 ```
