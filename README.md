@@ -26,7 +26,7 @@ https://128.107.232.43    (admin , cisco12345)
 
 # I. Environment Setup
 ---
-This is using Python 2. It is recommended to run this package in a virtual environment. 
+This is using Python 2. It is recommended to run this package in a virtual environment.
 
 **1. Open Terminal application**
 
@@ -37,7 +37,12 @@ This is using Python 2. It is recommended to run this package in a virtual envir
 ```text
 cd
 ```
-**3. Install virtual environment package**
+**3. Install virtual environment package (if not installed )**
+
+```text
+virtualenv --version
+```
+If the command is not recognized, install virtualenv with the following instructions, else go to step 4.
 
 ```text
 sudo pip install virtualenv
@@ -48,14 +53,7 @@ sudo pip install virtualenv
 ```text
 python --version
 ```
-
-**5(a). If python version is 2.x then do this:**
-
-```text
-virtualenv aci-workshop
-```
-
-**5(b). If python version is 3.x then do this:**
+**5. Create a virtual environment with python 2.7**
 
 ```text
 virtualenv aci-workshop --python=/usr/bin/python2.7
@@ -94,9 +92,9 @@ pip install ansible==2.7.8
 
 ```text
 THIS STEP HAS ALREADY BEEN DONE FOR YOU:
-   
+
 	download cobra eggs - from https://<apic>/cobra/_downloads
-   
+
 	The 2 egg files have been placed in your Downloads directory
 ```
 
@@ -135,20 +133,20 @@ Browse to your APIC simulator: https://<ip address> and login
 cd $HOME/aci_workshop_code_samples
 ```
 
-**17. Open the file "tenant_create.yml" using TextEdit**
+**17. Open the file "tenant_create.yml" using Atom**
 
 ```text
-open -e tenant_create.yml
+atom tenant_create.yml
 ```
 
 **18. Make these changes to the file:  tenant_create.yml**
 ```text
 Verify or make changes to insure these fields are as noted:
-	
+
 	aci_hostname:  <your APIC simulator>
 	tenant:        <your unique tenant name>
 	description:   <some description>
-	
+
 SAVE YOUR CHANGES - click on File, click on Save
 ```
 
@@ -174,22 +172,22 @@ cd $HOME/aci_workshop_code_samples/playbook_vars/aci_workshop_fab1
 ```
 
 
-**22. Open the file "aci_fw_config_vars.yml" using TextEdit**
+**22. Open the file "aci_fw_config_vars.yml" using Atom**
 
 ```text
-open -e aci_fw_config_vars.yml
+atom aci_fw_config_vars.yml
 
 ```
 
 **23. Modify this file: aci_fw_config_vars.yml**
 ```text
 Note: this is the input variable file for the Playbook we will run later.
-	
+
 Verify or make changes to insure these fields are as noted:
-	
+
 	aci_hostname:  <your APIC simulator>
 	aci_tenant:    <your unique tenant name>
-	
+
 SAVE YOUR CHANGES - click on File, click on Save
 ```
 
@@ -223,24 +221,24 @@ cd $HOME/aci_workshop_code_samples
 **27. Change to python_scripts directory**
 
 ```text
-	cd $HOME/aci_workshop_code_samples/python_scripts 
+	cd $HOME/aci_workshop_code_samples/python_scripts
 ```
 
-**28. Open the file "policy_cfg_source.yml" using TextEdit**
+**28. Open the file "policy_cfg_source.yml" using Atom**
 
 ```text
-open -e policy_cfg_source.yml
+atom policy_cfg_source.yml
 ```
 
 
 **29. Modify this file:  policy_cfg_source.yml**
 ```text
 Verify or make changes to insure the tenant name is correct:
-	
+
 	tenants:
       -
         name: "<this is YOUR tenant you just created>"
-	
+
 SAVE YOUR CHANGES - click on File, click on Save
 ```
 
@@ -269,7 +267,7 @@ SAVE YOUR CHANGES - click on File, click on Save
 **33. Change to python_scripts directory**
 
 ```text
-	cd $HOME/aci_workshop_code_samples/python_scripts 
+	cd $HOME/aci_workshop_code_samples/python_scripts
 ```
 
 **34. Return to the command line, and view the Python script options**
