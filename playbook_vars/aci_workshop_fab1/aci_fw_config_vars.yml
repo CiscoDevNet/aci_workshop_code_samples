@@ -729,7 +729,7 @@ epg_dict_dmz:
   mode:                 trunk
 
   domain_type: physical
-  phys_domain_exists: True
+  phys_domain_exists: False
   domain_name: firepower-physDom
 
   vlan_pool_exists: True
