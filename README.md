@@ -94,6 +94,8 @@ pip install ansible==2.7.8
 THIS STEP HAS ALREADY BEEN DONE FOR YOU:
 
 	download cobra eggs - from https://<apic>/cobra/_downloads
+  wget https://www.dropbox.com/s/koiljhrra16g30o/acicobra-3.2_7f-py2.7.egg
+	wget https://www.dropbox.com/s/esohbv25bwtoj68/acimodel-3.2_7f-py2.7.egg
 
 	The 2 egg files have been placed in your Downloads directory
 ```
