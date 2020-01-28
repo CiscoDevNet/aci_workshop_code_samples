@@ -461,6 +461,11 @@
         tasks_from: fabric_access_policies.yml
   when: item.create_access_policies
 
+- name: pause
+  pause:
+    prompt: Check Fabric Access Policies on the APIC
+  when: item.l3out_name == "firepower-internal-l3Out"
+
 - name: Create VRF if doesn't already exist
   aci_vrf:
     host: '{{ aci_hostname }}'
@@ -627,6 +632,11 @@
         tasks_from: node_and_lif_profiles-demo.yml
   when: item.create_node_lif_profiles
 
+- name: pause
+  pause:
+    prompt: Check Network -> VRF and External Routed Networks on Tenant "{{ aci_tenant }}"
+  when: item.l3out_name == "firepower-internal-l3Out" or item.l3out_name == "firepower-protected-dmz-l3Out"
+
 # create VRF Level contract - simple permit all using common/default, if variable is set
 
 #- name: include node_and_lif_profiles role task
@@ -634,6 +644,3 @@
 #        name: contracts
 #        tasks_from: vrf_permit_all_contract.yml
 #  when: item.create_apply_vrf_contract
-
-
-
